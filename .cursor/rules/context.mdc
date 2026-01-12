@@ -6,36 +6,7 @@ alwaysApply: true
 
 # hoconfmt Project
 
-An opinionated HOCON (Human-Optimized Config Object Notation) formatter.
-
-## Philosophy
-
-- Zero-config, like standard.js
-- No configuration options - one way to format
-- Opinionated formatting rules
-
-## Public API
-
-```typescript
-function check(input: string): boolean  // Returns true if already formatted
-function format(input: string): string  // Returns formatted HOCON string
-```
-
-## Formatting Rules
-
-| Rule | Value |
-|------|-------|
-| Indentation | 2 spaces |
-| Key-value separator | ` = ` (equals with spaces) |
-| Brace style | Same line (`key = {`) |
-| Comments | Normalize to `//` |
-| Trailing whitespace | Remove |
-| Blank lines | Collapse multiple to single |
-| EOF | Single newline |
-| Strings | Double quotes |
-| Include order | Preserve original |
-| Key alignment | No alignment |
-| Arrays | Smart (single line if < 80 chars, multi-line otherwise) |
+An opinionated HOCON formatter with zero configuration. See [README.md](../README.md) for full documentation (API, formatting rules, usage examples).
 
 ## Project Structure
 
@@ -46,22 +17,12 @@ hoconfmt/
 │   ├── lexer.ts      # Tokenizer
 │   ├── parser.ts     # AST builder
 │   ├── formatter.ts  # Formatting logic
-│   ├── index.ts      # Public API
+│   ├── index.ts      # Public API (check, format)
 │   └── cli.ts        # CLI interface
 ├── test/             # Vitest tests
 ├── resource/         # Test HOCON files
 ├── bin/              # CLI binary
 └── dist/             # Build output (ESM, CJS, UMD)
-```
-
-## CLI Usage
-
-```bash
-hoconfmt file.conf           # Check single file
-hoconfmt "src/**/*.conf"     # Check with glob
-hoconfmt --check src/        # Check directory
-hoconfmt --version           # Show version
-hoconfmt --help              # Show help
 ```
 
 ## Technology Stack
