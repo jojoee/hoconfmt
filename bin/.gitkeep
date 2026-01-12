@@ -1,0 +1,2 @@
+# Placeholder for bin directory
+# The hoconfmt.js CLI will be built here by `npm run build:cli`
