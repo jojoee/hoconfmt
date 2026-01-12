@@ -1,0 +1,53 @@
+name: runnable
+
+on: [push, pull_request]
+
+jobs:
+  runnable:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build package
+        run: npm run build
+
+      - name: Build CLI
+        run: npm run build:cli
+
+      - name: Test CommonJS import
+        run: |
+          echo "const { check, format } = require('./dist/cjs/index.cjs');" > test-cjs.cjs
+          echo "console.log('CJS import works:', typeof check === 'function');" >> test-cjs.cjs
+          echo "console.log('Format function:', typeof format === 'function');" >> test-cjs.cjs
+          node test-cjs.cjs
+
+      - name: Test ESM import
+        run: |
+          echo "import { check, format } from './dist/esm/index.js';" > test-esm.mjs
+          echo "console.log('ESM import works:', typeof check === 'function');" >> test-esm.mjs
+          echo "console.log('Format function:', typeof format === 'function');" >> test-esm.mjs
+          node test-esm.mjs
+
+      - name: Test CLI help
+        run: node bin/hoconfmt.js --help
+
+      - name: Test CLI version
+        run: node bin/hoconfmt.js --version
+
+      - name: Test CLI with sample file
+        run: |
+          echo 'key = "value"' > test.conf
+          node bin/hoconfmt.js test.conf || true
