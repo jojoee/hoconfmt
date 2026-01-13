@@ -6,21 +6,23 @@
  *
  * Options:
  *   --check    Check if files are formatted (default)
+ *   --write    Format files in-place (overwrite)
  *   --version  Show version number
  *   --help     Show help
  *
  * Examples:
  *   hoconfmt file.conf
  *   hoconfmt "src/**\/*.conf"
- *   hoconfmt --check src/
+ *   hoconfmt --write src/
  */
 
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs';
 import { resolve, join, extname } from 'node:path';
 import { check, format } from './index.js';
 
 interface CliOptions {
   checkOnly: boolean;
+  write: boolean;
   showVersion: boolean;
   showHelp: boolean;
   files: string[];
@@ -36,19 +38,22 @@ Usage:
 
 Options:
   --check    Check if files are formatted (exit 0 if ok, 1 if not)
+  --write    Format files in-place (overwrite)
   --version  Show version number
   --help     Show help
 
 Examples:
   hoconfmt file.conf           Check single file
   hoconfmt "src/**/*.conf"     Check files matching glob
-  hoconfmt --check src/        Check all .conf files in directory
+  hoconfmt --write file.conf   Format and overwrite single file
+  hoconfmt --write src/        Format all .conf files in directory recursively
 
 `;
 
 function parseArgs(args: string[]): CliOptions {
   const options: CliOptions = {
     checkOnly: true, // Default behavior is check
+    write: false,
     showVersion: false,
     showHelp: false,
     files: [],
@@ -57,6 +62,10 @@ function parseArgs(args: string[]): CliOptions {
   for (const arg of args) {
     if (arg === '--check') {
       options.checkOnly = true;
+      options.write = false;
+    } else if (arg === '--write') {
+      options.write = true;
+      options.checkOnly = false;
     } else if (arg === '--version') {
       options.showVersion = true;
     } else if (arg === '--help') {
@@ -149,6 +158,23 @@ function checkFile(filePath: string): { ok: boolean; error?: string } {
   }
 }
 
+function formatFile(filePath: string): { ok: boolean; changed: boolean; error?: string } {
+  try {
+    const content = readFileSync(filePath, 'utf-8');
+    const formatted = format(content);
+
+    if (content === formatted) {
+      return { ok: true, changed: false };
+    }
+
+    writeFileSync(filePath, formatted, 'utf-8');
+    return { ok: true, changed: true };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return { ok: false, changed: false, error: message };
+  }
+}
+
 function main(): void {
   const args = process.argv.slice(2);
   const options = parseArgs(args);
@@ -176,60 +202,98 @@ function main(): void {
     process.exit(1);
   }
 
-  let hasErrors = false;
-  let checkedCount = 0;
-  let errorCount = 0;
+  if (options.write) {
+    // Format mode: format and overwrite files
+    let processedCount = 0;
+    let changedCount = 0;
+    let errorCount = 0;
 
-  for (const file of files) {
-    const result = checkFile(file);
-    checkedCount++;
+    for (const file of files) {
+      const result = formatFile(file);
+      processedCount++;
 
-    if (!result.ok) {
-      hasErrors = true;
-      errorCount++;
-
-      if (result.error) {
+      if (!result.ok) {
+        errorCount++;
         console.error(`✗ ${file}`);
         console.error(`  Error: ${result.error}`);
+      } else if (result.changed) {
+        changedCount++;
+        console.log(`✓ ${file} (formatted)`);
       } else {
-        console.error(`✗ ${file}`);
-        console.error('  File is not formatted correctly');
-
-        // Show expected format
-        try {
-          const content = readFileSync(file, 'utf-8');
-          const formatted = format(content);
-
-          // Show first difference
-          const lines = content.split('\n');
-          const formattedLines = formatted.split('\n');
-
-          for (let i = 0; i < Math.max(lines.length, formattedLines.length); i++) {
-            if (lines[i] !== formattedLines[i]) {
-              console.error(`  Line ${i + 1}:`);
-              console.error(`    - ${lines[i] ?? '(missing)'}`);
-              console.error(`    + ${formattedLines[i] ?? '(missing)'}`);
-              break;
-            }
-          }
-        } catch {
-          // Ignore formatting errors in diff display
-        }
+        console.log(`✓ ${file} (unchanged)`);
       }
-    } else {
-      console.log(`✓ ${file}`);
     }
-  }
 
-  console.log('');
-  console.log(`Checked ${checkedCount} file(s)`);
+    console.log('');
+    console.log(`Processed ${processedCount} file(s)`);
 
-  if (hasErrors) {
-    console.log(`${errorCount} file(s) need formatting`);
-    process.exit(1);
-  } else {
-    console.log('All files are formatted correctly');
+    if (changedCount > 0) {
+      console.log(`${changedCount} file(s) formatted`);
+    }
+
+    if (errorCount > 0) {
+      console.log(`${errorCount} file(s) failed`);
+      process.exit(1);
+    }
+
     process.exit(0);
+  } else {
+    // Check mode: validate formatting without modifying files
+    let hasErrors = false;
+    let checkedCount = 0;
+    let errorCount = 0;
+
+    for (const file of files) {
+      const result = checkFile(file);
+      checkedCount++;
+
+      if (!result.ok) {
+        hasErrors = true;
+        errorCount++;
+
+        if (result.error) {
+          console.error(`✗ ${file}`);
+          console.error(`  Error: ${result.error}`);
+        } else {
+          console.error(`✗ ${file}`);
+          console.error('  File is not formatted correctly');
+
+          // Show expected format
+          try {
+            const content = readFileSync(file, 'utf-8');
+            const formatted = format(content);
+
+            // Show first difference
+            const lines = content.split('\n');
+            const formattedLines = formatted.split('\n');
+
+            for (let i = 0; i < Math.max(lines.length, formattedLines.length); i++) {
+              if (lines[i] !== formattedLines[i]) {
+                console.error(`  Line ${i + 1}:`);
+                console.error(`    - ${lines[i] ?? '(missing)'}`);
+                console.error(`    + ${formattedLines[i] ?? '(missing)'}`);
+                break;
+              }
+            }
+          } catch {
+            // Ignore formatting errors in diff display
+          }
+        }
+      } else {
+        console.log(`✓ ${file}`);
+      }
+    }
+
+    console.log('');
+    console.log(`Checked ${checkedCount} file(s)`);
+
+    if (hasErrors) {
+      console.log(`${errorCount} file(s) need formatting`);
+      process.exit(1);
+    } else {
+      console.log('All files are formatted correctly');
+      process.exit(0);
+    }
   }
 }
 
