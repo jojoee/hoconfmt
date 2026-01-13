@@ -31,3 +31,7 @@ hoconfmt/
 - Vitest for testing
 - esbuild for bundling
 - semantic-release for versioning
+
+## CLI Conventions
+
+- Use full form options only (--check, --version, --help)
