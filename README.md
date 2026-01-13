@@ -219,14 +219,6 @@ npm run build
 npm run lint
 ```
 
-## License
-
-MIT
-
-## Author
-
-Nathachai Thongniran
-
 ## Related
 
 - [HOCON Specification](https://github.com/lightbend/config/blob/main/HOCON.md)
