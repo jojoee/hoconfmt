@@ -13,7 +13,6 @@ import type {
   SubstitutionNode,
   IncludeNode,
   CommentNode,
-  ConcatenationNode,
 } from './types.js';
 import { TokenType } from './types.js';
 import { tokenize } from './lexer.js';

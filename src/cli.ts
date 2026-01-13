@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /**
  * hoconfmt CLI - Opinionated HOCON Formatter
  *

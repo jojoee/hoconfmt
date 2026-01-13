@@ -1,4 +1,4 @@
-import type { Token, Position, Location } from './types.js';
+import type { Token, Position } from './types.js';
 import { TokenType } from './types.js';
 
 /**
