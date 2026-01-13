@@ -2,7 +2,7 @@
  * hoconfmt CLI - Opinionated HOCON Formatter
  *
  * Usage:
- *   hoconfmt [options] [files...]
+ *   hoconfmt <--check|--write> [files...]
  *
  * Options:
  *   --check    Check if files are formatted
@@ -11,8 +11,7 @@
  *   --help     Show help
  *
  * Examples:
- *   hoconfmt file.conf
- *   hoconfmt "src/**\/*.conf"
+ *   hoconfmt --check file.conf
  *   hoconfmt --write src/
  */
 
@@ -34,7 +33,7 @@ const HELP_TEXT = `
 hoconfmt - Opinionated HOCON Formatter
 
 Usage:
-  hoconfmt [options] [files...]
+  hoconfmt <--check|--write> [files...]
 
 Options:
   --check    Check if files are formatted (exit 0 if ok, 1 if not)
@@ -43,10 +42,10 @@ Options:
   --help     Show help
 
 Examples:
-  hoconfmt file.conf           Check single file
-  hoconfmt "src/**/*.conf"     Check files matching glob
-  hoconfmt --write file.conf   Format and overwrite single file
-  hoconfmt --write src/        Format all .conf files in directory recursively
+  hoconfmt --check file.conf      Check single file
+  hoconfmt --check "src/**/*.conf" Check files matching glob
+  hoconfmt --write file.conf      Format and overwrite single file
+  hoconfmt --write src/           Format all .conf files in directory recursively
 
 `;
 
