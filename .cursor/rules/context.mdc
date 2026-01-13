@@ -19,7 +19,7 @@ hoconfmt/
 │   ├── formatter.ts  # Formatting logic
 │   ├── index.ts      # Public API (check, format)
 │   └── cli.ts        # CLI interface
-├── test/             # Vitest tests
+├── test/             # Vitest tests (*.test.ts)
 ├── resource/         # Test HOCON files
 ├── bin/              # CLI binary
 └── dist/             # Build output (ESM, CJS, UMD)
@@ -27,11 +27,30 @@ hoconfmt/
 
 ## Technology Stack
 
-- TypeScript
+- TypeScript (ES2022, strict mode)
 - Vitest for testing
 - esbuild for bundling
 - semantic-release for versioning
 
+## TypeScript Conventions
+
+- Use `node:` prefix for built-in imports: `import { readFileSync } from 'node:fs'`
+- Use `.js` extension in relative imports: `import { parse } from './parser.js'`
+- Interface names use descriptive suffixes: CliOptions, FormatterOptions
+- Function names follow verb + noun pattern: parseArgs, checkFile, formatFile
+
+## Testing Conventions
+
+- Test files: `test/*.test.ts`
+- Use Vitest with describe/it pattern
+- Import from `'vitest'`: `import { describe, it, expect } from 'vitest'`
+
+## Documentation
+
+- Use JSDoc for public API functions with @param, @returns, @example blocks
+- Example code blocks in JSDoc should be TypeScript
+
 ## CLI Conventions
 
-- Use full form options only (--check, --version, --help)
+- Use full form options only (--check, --write, --version, --help)
+- No short form aliases (-c, -w, -v, -h)
