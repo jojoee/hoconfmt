@@ -25,10 +25,6 @@ coverage/
 README.md
 *.md
 
-# Example configs
-exampleconf/
-exampleconf-tobeformatted/
-
 # Docker files (avoid recursion)
 Dockerfile
 .dockerignore
