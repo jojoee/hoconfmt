@@ -5,7 +5,7 @@
  *   hoconfmt [options] [files...]
  *
  * Options:
- *   --check    Check if files are formatted (default)
+ *   --check    Check if files are formatted
  *   --write    Format files in-place (overwrite)
  *   --version  Show version number
  *   --help     Show help
@@ -52,7 +52,7 @@ Examples:
 
 function parseArgs(args: string[]): CliOptions {
   const options: CliOptions = {
-    checkOnly: true, // Default behavior is check
+    checkOnly: false,
     write: false,
     showVersion: false,
     showHelp: false,
@@ -199,6 +199,11 @@ function main(): void {
 
   if (files.length === 0) {
     console.error('Error: No .conf files found');
+    process.exit(1);
+  }
+
+  if (!options.checkOnly && !options.write) {
+    console.error('Error: No mode specified');
     process.exit(1);
   }
 
