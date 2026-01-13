@@ -108,34 +108,6 @@ These rules are **not configurable** - that's the point!
 | String quotes | Double quotes |
 | Array style | Single line if < 80 chars |
 
-### Before
-
-```hocon
-# Database config
-database{
-host="localhost"
-port=5432
-  pool {
-    min=1
-    max=10
-  }
-}
-```
-
-### After
-
-```hocon
-// Database config
-database = {
-  host = "localhost"
-  port = 5432
-  pool = {
-    min = 1
-    max = 10
-  }
-}
-```
-
 ## API Reference
 
 ### `check(input: string): boolean`
