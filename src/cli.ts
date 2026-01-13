@@ -44,14 +44,6 @@ Examples:
   hoconfmt "src/**/*.conf"     Check files matching glob
   hoconfmt --check src/        Check all .conf files in directory
 
-Formatting Rules (not configurable):
-  - 2 spaces indentation
-  - key = value (spaces around =)
-  - Opening brace on same line
-  - Comments normalized to //
-  - Trailing whitespace removed
-  - Single newline at end of file
-  - Double quotes for strings
 `;
 
 function parseArgs(args: string[]): CliOptions {
