@@ -5,9 +5,9 @@
  *   hoconfmt [options] [files...]
  *
  * Options:
- *   --check, -c    Check if files are formatted (default)
- *   --version, -v  Show version number
- *   --help, -h     Show help
+ *   --check    Check if files are formatted (default)
+ *   --version  Show version number
+ *   --help     Show help
  *
  * Examples:
  *   hoconfmt file.conf
@@ -35,9 +35,9 @@ Usage:
   hoconfmt [options] [files...]
 
 Options:
-  --check, -c    Check if files are formatted (exit 0 if ok, 1 if not)
-  --version, -v  Show version number
-  --help, -h     Show help
+  --check    Check if files are formatted (exit 0 if ok, 1 if not)
+  --version  Show version number
+  --help     Show help
 
 Examples:
   hoconfmt file.conf           Check single file
@@ -55,11 +55,11 @@ function parseArgs(args: string[]): CliOptions {
   };
 
   for (const arg of args) {
-    if (arg === '--check' || arg === '-c') {
+    if (arg === '--check') {
       options.checkOnly = true;
-    } else if (arg === '--version' || arg === '-v') {
+    } else if (arg === '--version') {
       options.showVersion = true;
-    } else if (arg === '--help' || arg === '-h') {
+    } else if (arg === '--help') {
       options.showHelp = true;
     } else if (!arg.startsWith('-')) {
       options.files.push(arg);
