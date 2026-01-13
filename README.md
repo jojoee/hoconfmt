@@ -191,6 +191,20 @@ npm run build
 npm run lint
 ```
 
+```bash run locally
+# Check a single file
+node bin/hoconfmt.js --check resource/all-cases.conf
+
+# Check entire resource folder
+node bin/hoconfmt.js --check resource/
+
+# Format a single file (writes changes)
+node bin/hoconfmt.js resource/all-cases.conf
+
+# Format entire resource folder (writes changes)
+node bin/hoconfmt.js resource/
+```
+
 ## Related
 
 - [HOCON Specification](https://github.com/lightbend/config/blob/main/HOCON.md)
