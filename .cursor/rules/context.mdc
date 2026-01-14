@@ -54,3 +54,22 @@ hoconfmt/
 
 - Use full form options only (--check, --write, --version, --help)
 - No short form aliases (-c, -w, -v, -h)
+
+## Verification Steps
+
+Before committing changes, run these verification steps:
+
+1. **Linting**: `npm run lint` - Check code quality (warnings for console in CLI are expected)
+2. **Unit Tests**: `npm run test` - Verify all tests pass
+3. **Code Coverage**: `npm run test:coverage` - Check coverage metrics
+4. **Build**: `npm run build && npm run build:cli` - Ensure all formats build successfully
+
+## Post-Work
+
+After implementing a feature:
+
+1. **Update README.md** - Document new formatting rules or API changes
+2. **Update resource files**:
+   - Add examples to `resource/all-cases.conf` (INVALID and VALID sections)
+   - Create case file in `resource/cases/` folder (e.g., `16-blank-lines.conf`)
+3. **Git commit** - Use semantic-release pattern (feat:, fix:, docs:, etc.)
