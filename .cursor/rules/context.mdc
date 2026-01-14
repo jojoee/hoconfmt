@@ -28,16 +28,23 @@ hoconfmt/
 ## Technology Stack
 
 - TypeScript (ES2022, strict mode)
-- Vitest for testing
-- esbuild for bundling
+- Node.js >= 24.0.0 (pinned in package.json engines and CI/CD)
+- Vitest for testing (with 80% coverage threshold)
+- esbuild for bundling (ESM, CJS, UMD formats)
 - semantic-release for versioning
+- ts-standard for linting (no separate ESLint/Prettier)
+- Docker support (Dockerfile, GitHub Container Registry)
 
 ## TypeScript Conventions
 
 - Use `node:` prefix for built-in imports: `import { readFileSync } from 'node:fs'`
 - Use `.js` extension in relative imports: `import { parse } from './parser.js'`
-- Interface names use descriptive suffixes: CliOptions, FormatterOptions
+- Interface names use descriptive suffixes: CliOptions, FormatterOptions, *Node
 - Function names follow verb + noun pattern: parseArgs, checkFile, formatFile
+- Enum names use PascalCase: TokenType
+- All interfaces extend BaseNode for AST nodes
+- Use `type` for unions: `type ValueNode = StringNode | NumberNode | ...`
+- Strict TypeScript config with noUncheckedIndexedAccess, noUnusedLocals, noImplicitReturns
 
 ## Testing Conventions
 
@@ -54,6 +61,10 @@ hoconfmt/
 
 - Use full form options only (--check, --write, --version, --help)
 - No short form aliases (-c, -w, -v, -h)
+- Exit code 0 for success, 1 for failure
+- Provide clear error messages with suggestions
+- Show progress indicators (✓ for success, ✗ for errors)
+- Include file counts and summary after processing
 
 ## Verification Steps
 
@@ -63,6 +74,27 @@ Before committing changes, run these verification steps:
 2. **Unit Tests**: `npm run test` - Verify all tests pass
 3. **Code Coverage**: `npm run test:coverage` - Check coverage metrics
 4. **Build**: `npm run build && npm run build:cli` - Ensure all formats build successfully
+
+## Code Architecture
+
+- Lexer-Parser-Formatter pipeline: `lexer.ts` → `parser.ts` → `formatter.ts`
+- Formatter implemented as class with private methods
+- Single responsibility: each module handles one concern
+- AST-based formatting (not string manipulation)
+- Options pattern with DEFAULT_OPTIONS (zero-config philosophy)
+
+## Error Handling
+
+- Use try-catch blocks with graceful degradation
+- Return result objects: `{ ok: boolean, error?: string }`
+- Never throw errors from public API
+- Provide meaningful error messages
+
+## Resource Files
+
+- Test examples in `resource/cases/*.conf` (numbered: 01-*, 02-*, etc.)
+- Combined examples in `resource/all-cases.conf` with INVALID and VALID sections
+- Use real-world HOCON patterns for testing
 
 ## Post-Work
 
