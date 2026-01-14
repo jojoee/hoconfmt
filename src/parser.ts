@@ -347,9 +347,11 @@ export class Parser {
 
     const fields: Array<FieldNode | IncludeNode | CommentNode> = []
 
-    // Save outer pending comments to prevent scope leakage
+    // Save outer pending comments and blank lines to prevent scope leakage
     const savedPendingComments = this.pendingComments
+    const savedPendingBlankLines = this.pendingBlankLines
     this.pendingComments = []
+    this.pendingBlankLines = 0
 
     this.skipWhitespaceAndNewlines()
 
@@ -388,8 +390,9 @@ export class Parser {
       fields.push(comment)
     }
 
-    // Restore outer pending comments
+    // Restore outer pending comments and blank lines
     this.pendingComments = savedPendingComments
+    this.pendingBlankLines = savedPendingBlankLines
 
     if (this.currentToken().type === TokenType.RightBrace) {
       this.advance()
@@ -412,9 +415,11 @@ export class Parser {
 
     const elements: Array<ValueNode | CommentNode> = []
 
-    // Save outer pending comments to prevent scope leakage
+    // Save outer pending comments and blank lines to prevent scope leakage
     const savedPendingComments = this.pendingComments
+    const savedPendingBlankLines = this.pendingBlankLines
     this.pendingComments = []
+    this.pendingBlankLines = 0
 
     this.skipWhitespaceAndNewlines()
 
@@ -444,8 +449,9 @@ export class Parser {
       this.skipWhitespaceAndNewlines()
     }
 
-    // Restore outer pending comments
+    // Restore outer pending comments and blank lines
     this.pendingComments = savedPendingComments
+    this.pendingBlankLines = savedPendingBlankLines
 
     if (this.currentToken().type === TokenType.RightBracket) {
       this.advance()

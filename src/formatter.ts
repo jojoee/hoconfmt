@@ -59,8 +59,17 @@ export class Formatter {
       const isFirst = i === 0
 
       // Add blank line if node has preceding blank lines (collapse to max 1)
-      if (!isFirst && node.precedingBlankLines !== undefined && node.precedingBlankLines > 0) {
-        this.output += '\n'
+      // When node has leadingComments, use first comment's precedingBlankLines instead
+      if (!isFirst) {
+        let blankLines = 0
+        if (node.leadingComments != null && node.leadingComments.length > 0 && node.leadingComments[0] != null) {
+          blankLines = node.leadingComments[0].precedingBlankLines ?? 0
+        } else {
+          blankLines = node.precedingBlankLines ?? 0
+        }
+        if (blankLines > 0) {
+          this.output += '\n'
+        }
       }
 
       this.formatRootElement(node)
@@ -80,6 +89,12 @@ export class Formatter {
         }
         this.writeIndent()
         this.formatComment(comment)
+        this.output += '\n'
+      }
+      // Add blank line after all leading comments if node has precedingBlankLines
+      // This preserves the blank line between the last comment and the field
+      const blankLinesAfterComments = node.precedingBlankLines ?? 0
+      if (blankLinesAfterComments > 0) {
         this.output += '\n'
       }
     }
@@ -218,8 +233,17 @@ export class Formatter {
       const isFirst = i === 0
 
       // Add blank line if field has preceding blank lines (collapse to max 1)
-      if (!isFirst && field.precedingBlankLines !== undefined && field.precedingBlankLines > 0) {
-        this.output += '\n'
+      // When field has leadingComments, use first comment's precedingBlankLines instead
+      if (!isFirst) {
+        let blankLines = 0
+        if (field.leadingComments != null && field.leadingComments.length > 0 && field.leadingComments[0] != null) {
+          blankLines = field.leadingComments[0].precedingBlankLines ?? 0
+        } else {
+          blankLines = field.precedingBlankLines ?? 0
+        }
+        if (blankLines > 0) {
+          this.output += '\n'
+        }
       }
 
       this.formatRootElement(field)

@@ -323,6 +323,82 @@ key = "value"`;
 
       expect(result).toContain('// first comment\n\n// second comment');
     });
+
+    it('should preserve blank line before comment at root level', () => {
+      const input = `field1 = "value1"
+
+// comment with blank line before
+field2 = "value2"`;
+
+      const result = format(input);
+
+      expect(result).toBe(`field1 = "value1"
+
+// comment with blank line before
+field2 = "value2"
+`);
+    });
+
+    it('should preserve blank line after comment at root level', () => {
+      const input = `field1 = "value1"
+// comment
+
+field2 = "value2"`;
+
+      const result = format(input);
+
+      expect(result).toBe(`field1 = "value1"
+// comment
+
+field2 = "value2"
+`);
+    });
+
+    it('should preserve blank lines both before and after comments', () => {
+      const input = `obj = {
+  key1 = "value1"
+}
+
+// the default dispatcher is bounded by 16 threads
+// fixed-pool-size = 16
+
+field = {
+  key2 = "value2"
+}`;
+
+      const result = format(input);
+
+      expect(result).toBe(`obj = {
+  key1 = "value1"
+}
+
+// the default dispatcher is bounded by 16 threads
+// fixed-pool-size = 16
+
+field = {
+  key2 = "value2"
+}
+`);
+    });
+
+    it('should preserve blank line before comment inside object', () => {
+      const input = `obj = {
+  // producer will be closed in shutdown process
+  close-on-producer-stop = false
+
+  use-dispatcher = "akka.kafka.unbounded-dispatcher"
+}`;
+
+      const result = format(input);
+
+      expect(result).toBe(`obj = {
+  // producer will be closed in shutdown process
+  close-on-producer-stop = false
+
+  use-dispatcher = "akka.kafka.unbounded-dispatcher"
+}
+`);
+    });
   });
 
   describe('fix #4: triple quote spacing', () => {

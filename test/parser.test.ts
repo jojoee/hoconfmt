@@ -233,4 +233,48 @@ server {
       expect(field.value.value).toBe('unquoted-value');
     });
   });
+
+  describe('blank line tracking', () => {
+    it('should track precedingBlankLines with multiple comments', () => {
+      const input = `obj = "value1"
+
+// comment1
+// comment2
+
+field = "value2"`;
+
+      const ast = parse(input);
+
+      expect(ast.body).toHaveLength(2);
+
+      const field = ast.body[1];
+      expect(field?.type).toBe('Field');
+      expect(field?.leadingComments).toHaveLength(2);
+      expect(field?.leadingComments?.[0]?.precedingBlankLines).toBe(1);
+      expect(field?.precedingBlankLines).toBe(1);
+    });
+
+    it('should track precedingBlankLines with object values', () => {
+      const input = `obj = {
+  key1 = "value1"
+}
+
+// the default dispatcher is bounded by 16 threads
+// fixed-pool-size = 16
+
+field = {
+  key2 = "value2"
+}`;
+
+      const ast = parse(input);
+
+      expect(ast.body).toHaveLength(2);
+
+      const field = ast.body[1];
+      expect(field?.type).toBe('Field');
+      expect(field?.leadingComments).toHaveLength(2);
+      expect(field?.leadingComments?.[0]?.precedingBlankLines).toBe(1);
+      expect(field?.precedingBlankLines).toBe(1);
+    });
+  });
 });
