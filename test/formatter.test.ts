@@ -160,6 +160,24 @@ key2 = "value2"
 
       expect(result).toContain('include "file.conf"');
     });
+
+    it('should format required include', () => {
+      const result = format('include required("file.conf")');
+
+      expect(result).toContain('include required("file.conf")');
+    });
+
+    it('should format url include', () => {
+      const result = format('include url("http://example.com/config.conf")');
+
+      expect(result).toContain('include url("http://example.com/config.conf")');
+    });
+
+    it('should format classpath include', () => {
+      const result = format('include classpath("reference.conf")');
+
+      expect(result).toContain('include classpath("reference.conf")');
+    });
   });
 
   describe('substitutions', () => {
