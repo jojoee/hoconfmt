@@ -6,6 +6,23 @@
   <title>hoconfmt Demo - HOCON Formatter</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
   <style>
+    /* CSS Custom Properties */
+    :root {
+      --color-primary: #00d1b2;
+      --color-primary-hover: #00e7c3;
+      --color-primary-shadow: rgba(0, 209, 178, 0.25);
+      --color-border: #3d3d3d;
+      --font-mono: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace;
+      --font-size-code: 0.875rem;
+      --spacing-section: 2rem 1.5rem;
+      --spacing-code: 0.625em;
+      --border-radius: 4px;
+      --border-width: 1px;
+      --focus-outline: 0.125em;
+      --min-editor-height: 400px;
+    }
+
+    /* Base Layout */
     html, body {
       min-height: 100vh;
       margin: 0;
@@ -18,49 +35,58 @@
     }
     
     .section {
-      padding: 2rem 1.5rem;
+      padding: var(--spacing-section);
       flex: 1;
     }
     
+    /* Components */
     .box {
       border: none;
       box-shadow: none;
     }
 
+    /* Typography */
+    .hocon-textarea,
+    .output-area {
+      font-family: var(--font-mono);
+      font-size: var(--font-size-code);
+    }
+
+    /* Input Area */
     .hocon-textarea {
-      font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace;
-      font-size: 0.875rem;
-      border: 1px solid #3d3d3d;
+      border: var(--border-width) solid var(--color-border);
       resize: vertical;
     }
     
     .hocon-textarea:focus {
-      border-color: #00d1b2;
-      box-shadow: 0 0 0 0.125em rgba(0, 209, 178, 0.25);
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 var(--focus-outline) var(--color-primary-shadow);
     }
     
+    /* Output Area */
     .output-area {
-      font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace;
-      font-size: 0.875rem;
       white-space: pre-wrap;
       word-wrap: break-word;
-      border: 1px solid #3d3d3d;
-      border-radius: 4px;
-      padding: 0.625em;
+      border: var(--border-width) solid var(--color-border);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-code);
       overflow: auto;
     }
 
-    #input, #output {
-      min-height: 400px;
+    /* Editor Heights */
+    #input,
+    #output {
+      min-height: var(--min-editor-height);
       max-height: none;
     }
 
+    /* Links */
     a {
-      color: #00d1b2;
+      color: var(--color-primary);
     }
     
     a:hover {
-      color: #00e7c3;
+      color: var(--color-primary-hover);
     }
   </style>
 </head>
@@ -77,10 +103,10 @@
                 <h2 class="title is-5">Input (Unformatted HOCON)</h2>
               </div>
               <div class="level-right">
-                <button id="formatBtn" class="button is-primary">Format</button>
+                <button id="formatBtn" class="button is-primary" aria-label="Format HOCON code">Format</button>
               </div>
             </div>
-            <textarea id="input" class="textarea hocon-textarea fixed-height"></textarea>
+            <textarea id="input" class="textarea hocon-textarea" aria-label="HOCON input editor"></textarea>
           </div>
         </div>
 
@@ -92,10 +118,10 @@
                 <h2 class="title is-5">Output (Formatted HOCON)</h2>
               </div>
               <div class="level-right">
-                <button id="copyBtn" class="button is-primary" disabled>Copy</button>
+                <button id="copyBtn" class="button is-primary" disabled aria-label="Copy formatted output">Copy</button>
               </div>
             </div>
-            <pre id="output" class="output-area fixed-height"></pre>
+            <pre id="output" class="output-area" aria-label="Formatted HOCON output" aria-live="polite"></pre>
           </div>
         </div>
       </div>
@@ -116,87 +142,103 @@
   <!-- Scripts -->
   <script src="https://unpkg.com/hoconfmt@1.2.1/dist/hoconfmt.umd.js"></script>
   <script>
-    const DEFAULT_CONTENT_URL = 'https://raw.githubusercontent.com/jojoee/hoconfmt/refs/heads/main/resource/all-cases.conf';
-    
-    const inputEl = document.getElementById('input');
-    const outputEl = document.getElementById('output');
-    const formatBtn = document.getElementById('formatBtn');
-    const copyBtn = document.getElementById('copyBtn');
+    // Configuration
+    const CONFIG = {
+      DEFAULT_CONTENT_URL: 'https://raw.githubusercontent.com/jojoee/hoconfmt/refs/heads/main/resource/all-cases.conf',
+      SYNC_DELAY_MS: 10
+    };
 
-    // Load default content on page load
+    // DOM Elements
+    const elements = {
+      input: document.getElementById('input'),
+      output: document.getElementById('output'),
+      formatBtn: document.getElementById('formatBtn'),
+      copyBtn: document.getElementById('copyBtn')
+    };
+
+    /**
+     * Loads default HOCON content from GitHub repository
+     * @returns {Promise<void>}
+     */
     async function loadDefaultContent() {
       try {
-        const response = await fetch(DEFAULT_CONTENT_URL);
+        const response = await fetch(CONFIG.DEFAULT_CONTENT_URL);
         if (response.ok) {
           const content = await response.text();
-          inputEl.value = content;
+          elements.input.value = content;
         }
       } catch (error) {
         console.error('Failed to load default content:', error);
       }
     }
 
-    // Sync heights between input and output
+    /**
+     * Synchronizes heights between input and output areas
+     * Sets both elements to the maximum of their natural heights
+     * @returns {void}
+     */
     function syncHeights() {
-      // Get the natural height of both elements
-      inputEl.style.height = 'auto';
-      outputEl.style.height = 'auto';
+      elements.input.style.height = 'auto';
+      elements.output.style.height = 'auto';
       
-      const inputScrollHeight = inputEl.scrollHeight;
-      const outputScrollHeight = outputEl.scrollHeight;
-      
-      // Use the maximum height for both
+      const inputScrollHeight = elements.input.scrollHeight;
+      const outputScrollHeight = elements.output.scrollHeight;
       const maxHeight = Math.max(inputScrollHeight, outputScrollHeight);
       
-      inputEl.style.height = maxHeight + 'px';
-      outputEl.style.height = maxHeight + 'px';
+      elements.input.style.height = `${maxHeight}px`;
+      elements.output.style.height = `${maxHeight}px`;
     }
 
-    // Format button click handler
-    formatBtn.addEventListener('click', function() {
-      const input = inputEl.value;
+    /**
+     * Resets editor heights to their default state
+     * @returns {void}
+     */
+    function resetHeights() {
+      elements.input.style.height = '';
+      elements.output.style.height = '';
+    }
+
+    /**
+     * Updates the copy button state based on output content
+     * @param {boolean} hasValidContent - Whether output has valid content to copy
+     * @returns {void}
+     */
+    function updateCopyButton(hasValidContent) {
+      elements.copyBtn.disabled = !hasValidContent;
+    }
+
+    /**
+     * Handles formatting of HOCON input
+     * @returns {void}
+     */
+    function handleFormat() {
+      const input = elements.input.value;
       
       if (!input.trim()) {
-        outputEl.textContent = '';
-        outputEl.classList.remove('full-height');
-        outputEl.classList.add('fixed-height');
-        inputEl.classList.remove('full-height');
-        inputEl.classList.add('fixed-height');
-        inputEl.style.height = '';
-        outputEl.style.height = '';
-        copyBtn.disabled = true;
+        elements.output.textContent = '';
+        resetHeights();
+        updateCopyButton(false);
         return;
       }
 
       try {
         const formatted = hoconfmt.format(input);
-        outputEl.textContent = formatted;
-        
-        // Remove fixed height classes
-        inputEl.classList.remove('fixed-height');
-        outputEl.classList.remove('fixed-height');
-        
-        // Sync heights after a brief delay to ensure content is rendered
-        setTimeout(syncHeights, 10);
-        
-        copyBtn.disabled = false;
+        elements.output.textContent = formatted;
+        setTimeout(syncHeights, CONFIG.SYNC_DELAY_MS);
+        updateCopyButton(true);
       } catch (error) {
-        outputEl.textContent = 'Error: ' + (error.message || 'Invalid HOCON');
-        
-        // Remove fixed height classes
-        inputEl.classList.remove('fixed-height');
-        outputEl.classList.remove('fixed-height');
-        
-        // Sync heights even on error
-        setTimeout(syncHeights, 10);
-        
-        copyBtn.disabled = true;
+        elements.output.textContent = 'Error: ' + (error.message || 'Invalid HOCON');
+        setTimeout(syncHeights, CONFIG.SYNC_DELAY_MS);
+        updateCopyButton(false);
       }
-    });
+    }
 
-    // Copy button click handler
-    copyBtn.addEventListener('click', async function() {
-      const text = outputEl.textContent;
+    /**
+     * Handles copying formatted output to clipboard
+     * @returns {Promise<void>}
+     */
+    async function handleCopy() {
+      const text = elements.output.textContent;
       
       if (!text) {
         return;
@@ -207,7 +249,11 @@
       } catch (error) {
         console.error('Failed to copy:', error);
       }
-    });
+    }
+
+    // Event Listeners
+    elements.formatBtn.addEventListener('click', handleFormat);
+    elements.copyBtn.addEventListener('click', handleCopy);
 
     // Initialize
     loadDefaultContent();
