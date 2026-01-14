@@ -205,6 +205,11 @@ node bin/hoconfmt.js resource/all-cases.conf
 node bin/hoconfmt.js resource/
 ```
 
+## TODO
+
+- [ ] Docker support
+- [ ] Add Mutation test
+
 ## Related
 
 - [HOCON Specification](https://github.com/lightbend/config/blob/main/HOCON.md)
