@@ -16,8 +16,8 @@
  * ```
  */
 
-import { parse } from './parser.js';
-import { formatAst } from './formatter.js';
+import { parse } from './parser.js'
+import { formatAst } from './formatter.js'
 
 /**
  * Check if HOCON string is formatted correctly
@@ -31,13 +31,13 @@ import { formatAst } from './formatter.js';
  * // Returns true if properly formatted
  * ```
  */
-export function check(input: string): boolean {
+export function check (input: string): boolean {
   try {
-    const formatted = format(input);
-    return input === formatted;
+    const formatted = format(input)
+    return input === formatted
   } catch {
     // If parsing fails, it's not properly formatted
-    return false;
+    return false
   }
 }
 
@@ -65,9 +65,9 @@ export function check(input: string): boolean {
  * // Returns: 'key = "value"\n'
  * ```
  */
-export function format(input: string): string {
-  const ast = parse(input);
-  return formatAst(ast);
+export function format (input: string): string {
+  const ast = parse(input)
+  return formatAst(ast)
 }
 
 // Re-export types for TypeScript users
@@ -88,12 +88,12 @@ export type {
   SubstitutionNode,
   IncludeNode,
   CommentNode,
-  ConcatenationNode,
-} from './types.js';
+  ConcatenationNode
+} from './types.js'
 
-export { TokenType } from './types.js';
+export { TokenType } from './types.js'
 
 // Re-export low-level functions for advanced use
-export { tokenize } from './lexer.js';
-export { parse } from './parser.js';
-export { formatAst } from './formatter.js';
+export { tokenize } from './lexer.js'
+export { parse } from './parser.js'
+export { formatAst } from './formatter.js'

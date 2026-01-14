@@ -12,63 +12,63 @@ import type {
   NullNode,
   SubstitutionNode,
   IncludeNode,
-  CommentNode,
-} from './types.js';
-import { TokenType } from './types.js';
-import { tokenize } from './lexer.js';
+  CommentNode
+} from './types.js'
+import { TokenType } from './types.js'
+import { tokenize } from './lexer.js'
 
 /**
  * HOCON Parser - Builds AST from tokens
  * Preserves comments for formatting
  */
 export class Parser {
-  private tokens: Token[] = [];
-  private pos: number = 0;
-  private pendingComments: CommentNode[] = [];
-  private pendingBlankLines: number = 0;
+  private readonly tokens: Token[] = []
+  private pos: number = 0
+  private pendingComments: CommentNode[] = []
+  private pendingBlankLines: number = 0
 
-  constructor(tokens: Token[]) {
-    this.tokens = tokens;
+  constructor (tokens: Token[]) {
+    this.tokens = tokens
   }
 
   /**
    * Parse tokens into AST
    */
-  parse(): DocumentNode {
-    const body: (FieldNode | IncludeNode | CommentNode)[] = [];
-    const startLoc = this.currentToken().location;
+  parse (): DocumentNode {
+    const body: Array<FieldNode | IncludeNode | CommentNode> = []
+    const startLoc = this.currentToken().location
 
-    this.skipWhitespaceAndNewlines();
+    this.skipWhitespaceAndNewlines()
 
     while (!this.isAtEnd()) {
       // Collect leading comments
-      this.collectComments();
+      this.collectComments()
 
       if (this.isAtEnd()) {
-        break;
+        break
       }
 
-      const node = this.parseRootElement();
-      if (node) {
+      const node = this.parseRootElement()
+      if (node != null) {
         // Attach pending comments to node
         if (this.pendingComments.length > 0) {
-          node.leadingComments = [...this.pendingComments];
-          this.pendingComments = [];
+          node.leadingComments = [...this.pendingComments]
+          this.pendingComments = []
         }
         // Attach pending blank lines to node
         if (this.pendingBlankLines > 0) {
-          node.precedingBlankLines = this.pendingBlankLines;
-          this.pendingBlankLines = 0;
+          node.precedingBlankLines = this.pendingBlankLines
+          this.pendingBlankLines = 0
         }
-        body.push(node);
+        body.push(node)
       }
 
-      this.skipWhitespaceAndNewlines();
+      this.skipWhitespaceAndNewlines()
     }
 
     // Add any remaining comments
     for (const comment of this.pendingComments) {
-      body.push(comment);
+      body.push(comment)
     }
 
     return {
@@ -76,81 +76,81 @@ export class Parser {
       body,
       location: {
         start: startLoc.start,
-        end: this.currentToken().location.end,
-      },
-    };
+        end: this.currentToken().location.end
+      }
+    }
   }
 
-  private parseRootElement(): FieldNode | IncludeNode | CommentNode | null {
-    const token = this.currentToken();
+  private parseRootElement (): FieldNode | IncludeNode | CommentNode | null {
+    const token = this.currentToken()
 
     if (token.type === TokenType.Include) {
-      return this.parseInclude();
+      return this.parseInclude()
     }
 
     if (token.type === TokenType.Key || token.type === TokenType.String) {
-      return this.parseField();
+      return this.parseField()
     }
 
     if (token.type === TokenType.Comment) {
-      return this.parseComment();
+      return this.parseComment()
     }
 
     // Skip unknown tokens
-    this.advance();
-    return null;
+    this.advance()
+    return null
   }
 
-  private parseInclude(): IncludeNode {
-    const startLoc = this.currentToken().location;
-    this.advance(); // 'include'
+  private parseInclude (): IncludeNode {
+    const startLoc = this.currentToken().location
+    this.advance() // 'include'
 
-    this.skipWhitespace();
+    this.skipWhitespace()
 
-    let required = false;
-    let kind: 'file' | 'url' | 'classpath' = 'file';
+    let required = false
+    let kind: 'file' | 'url' | 'classpath' = 'file'
 
     // Check for required() or file() or url() or classpath()
-    const nextToken = this.currentToken();
+    const nextToken = this.currentToken()
     if (nextToken.type === TokenType.Key) {
       if (nextToken.value === 'required') {
-        required = true;
-        this.advance();
-        this.skipWhitespace();
+        required = true
+        this.advance()
+        this.skipWhitespace()
         // Expect (
         if (this.currentToken().raw === '(') {
-          this.advance();
+          this.advance()
         }
       } else if (nextToken.value === 'file' || nextToken.value === 'url' || nextToken.value === 'classpath') {
-        kind = nextToken.value as 'file' | 'url' | 'classpath';
-        this.advance();
-        this.skipWhitespace();
+        kind = nextToken.value
+        this.advance()
+        this.skipWhitespace()
         if (this.currentToken().raw === '(') {
-          this.advance();
+          this.advance()
         }
       }
     }
 
-    this.skipWhitespace();
+    this.skipWhitespace()
 
     // Parse the path string
-    let path = '';
+    let path = ''
     if (this.currentToken().type === TokenType.String) {
-      path = this.currentToken().value;
-      this.advance();
+      path = this.currentToken().value
+      this.advance()
     }
 
-    this.skipWhitespace();
+    this.skipWhitespace()
 
     // Skip closing ) if present
     if (this.currentToken().raw === ')') {
-      this.advance();
+      this.advance()
     }
 
     // Skip second closing ) for required(file(...))
-    this.skipWhitespace();
+    this.skipWhitespace()
     if (this.currentToken().raw === ')') {
-      this.advance();
+      this.advance()
     }
 
     return {
@@ -160,41 +160,41 @@ export class Parser {
       kind,
       location: {
         start: startLoc.start,
-        end: this.previousToken().location.end,
-      },
-    };
+        end: this.previousToken().location.end
+      }
+    }
   }
 
-  private parseField(): FieldNode {
-    const startLoc = this.currentToken().location;
-    const key = this.parseKey();
+  private parseField (): FieldNode {
+    const startLoc = this.currentToken().location
+    const key = this.parseKey()
 
-    this.skipWhitespace();
+    this.skipWhitespace()
 
     // Determine separator
-    let separator: '=' | ':' | 'none' = 'none';
-    const sepToken = this.currentToken();
+    let separator: '=' | ':' | 'none' = 'none'
+    const sepToken = this.currentToken()
 
     if (sepToken.type === TokenType.Equals) {
-      separator = '=';
-      this.advance();
+      separator = '='
+      this.advance()
     } else if (sepToken.type === TokenType.Colon) {
-      separator = ':';
-      this.advance();
+      separator = ':'
+      this.advance()
     } else if (sepToken.type === TokenType.PlusEquals) {
-      separator = '='; // Treat += as = for formatting
-      this.advance();
+      separator = '=' // Treat += as = for formatting
+      this.advance()
     }
 
-    this.skipWhitespace();
+    this.skipWhitespace()
 
-    const value = this.parseValue();
+    const value = this.parseValue()
 
     // Check for trailing comment on same line
-    this.skipWhitespace();
-    let trailingComment: CommentNode | undefined;
+    this.skipWhitespace()
+    let trailingComment: CommentNode | undefined
     if (this.currentToken().type === TokenType.Comment) {
-      trailingComment = this.parseComment();
+      trailingComment = this.parseComment()
     }
 
     const field: FieldNode = {
@@ -204,53 +204,53 @@ export class Parser {
       value,
       location: {
         start: startLoc.start,
-        end: this.previousToken().location.end,
-      },
-    };
-
-    if (trailingComment) {
-      field.trailingComment = trailingComment;
+        end: this.previousToken().location.end
+      }
     }
 
-    return field;
+    if (trailingComment != null) {
+      field.trailingComment = trailingComment
+    }
+
+    return field
   }
 
-  private parseKey(): KeyNode {
-    const startLoc = this.currentToken().location;
-    const parts: string[] = [];
-    let raw = '';
+  private parseKey (): KeyNode {
+    const startLoc = this.currentToken().location
+    const parts: string[] = []
+    let raw = ''
 
     // First part
     if (this.currentToken().type === TokenType.Key || this.currentToken().type === TokenType.String) {
-      parts.push(this.currentToken().value);
-      raw = this.currentToken().raw;
-      this.advance();
+      parts.push(this.currentToken().value)
+      raw = this.currentToken().raw
+      this.advance()
     }
 
     // Additional parts separated by dots (already in key for unquoted)
     // For quoted keys like "foo"."bar", handle them
     while (this.currentToken().raw === '.') {
-      raw += '.';
-      this.advance();
+      raw += '.'
+      this.advance()
       if (this.currentToken().type === TokenType.Key || this.currentToken().type === TokenType.String) {
-        parts.push(this.currentToken().value);
-        raw += this.currentToken().raw;
-        this.advance();
+        parts.push(this.currentToken().value)
+        raw += this.currentToken().raw
+        this.advance()
       }
     }
 
     // If raw contains dots and we only have one part, split it
     if (parts.length === 1 && raw.includes('.')) {
-      const splitParts = raw.split('.');
+      const splitParts = raw.split('.')
       return {
         type: 'Key',
         parts: splitParts,
         raw,
         location: {
           start: startLoc.start,
-          end: this.previousToken().location.end,
-        },
-      };
+          end: this.previousToken().location.end
+        }
+      }
     }
 
     return {
@@ -259,75 +259,76 @@ export class Parser {
       raw,
       location: {
         start: startLoc.start,
-        end: this.previousToken().location.end,
-      },
-    };
+        end: this.previousToken().location.end
+      }
+    }
   }
 
-  private parseValue(): ValueNode {
+  private parseValue (): ValueNode {
     // Check for concatenation (multiple values without separator)
-    const firstValue = this.parseSingleValue();
-    const parts: ValueNode[] = [firstValue];
+    const firstValue = this.parseSingleValue()
+    const parts: ValueNode[] = [firstValue]
 
     // Check for concatenation
-    this.skipWhitespace();
+    this.skipWhitespace()
     while (this.canStartValue() && !this.isAtLineEnd()) {
-      parts.push(this.parseSingleValue());
-      this.skipWhitespace();
+      parts.push(this.parseSingleValue())
+      this.skipWhitespace()
     }
 
     if (parts.length === 1) {
-      return parts[0]!;
+      return parts[0] ?? firstValue
     }
 
+    const lastPart = parts[parts.length - 1]
     return {
       type: 'Concatenation',
       parts,
       location: {
         start: firstValue.location.start,
-        end: parts[parts.length - 1]!.location.end,
-      },
-    };
+        end: lastPart !== undefined ? lastPart.location.end : firstValue.location.end
+      }
+    }
   }
 
-  private parseSingleValue(): ValueNode {
-    const token = this.currentToken();
+  private parseSingleValue (): ValueNode {
+    const token = this.currentToken()
 
     if (token.type === TokenType.LeftBrace) {
-      return this.parseObject();
+      return this.parseObject()
     }
 
     if (token.type === TokenType.LeftBracket) {
-      return this.parseArray();
+      return this.parseArray()
     }
 
     if (token.type === TokenType.String) {
-      return this.parseString();
+      return this.parseString()
     }
 
     if (token.type === TokenType.MultilineString) {
-      return this.parseMultilineString();
+      return this.parseMultilineString()
     }
 
     if (token.type === TokenType.Number) {
-      return this.parseNumber();
+      return this.parseNumber()
     }
 
     if (token.type === TokenType.Boolean) {
-      return this.parseBoolean();
+      return this.parseBoolean()
     }
 
     if (token.type === TokenType.Null) {
-      return this.parseNull();
+      return this.parseNull()
     }
 
     if (token.type === TokenType.Substitution) {
-      return this.parseSubstitution();
+      return this.parseSubstitution()
     }
 
     if (token.type === TokenType.Key) {
       // Unquoted string value
-      return this.parseUnquotedString();
+      return this.parseUnquotedString()
     }
 
     // Default to empty string
@@ -336,56 +337,56 @@ export class Parser {
       value: '',
       raw: '',
       multiline: false,
-      location: token.location,
-    };
+      location: token.location
+    }
   }
 
-  private parseObject(): ObjectNode {
-    const startLoc = this.currentToken().location;
-    this.advance(); // {
+  private parseObject (): ObjectNode {
+    const startLoc = this.currentToken().location
+    this.advance() // {
 
-    const fields: (FieldNode | IncludeNode | CommentNode)[] = [];
+    const fields: Array<FieldNode | IncludeNode | CommentNode> = []
 
-    this.skipWhitespaceAndNewlines();
+    this.skipWhitespaceAndNewlines()
 
     while (!this.isAtEnd() && this.currentToken().type !== TokenType.RightBrace) {
-      this.collectComments();
+      this.collectComments()
 
       if (this.currentToken().type === TokenType.RightBrace) {
-        break;
+        break
       }
 
-      const node = this.parseRootElement();
-      if (node) {
+      const node = this.parseRootElement()
+      if (node != null) {
         if (this.pendingComments.length > 0) {
-          node.leadingComments = [...this.pendingComments];
-          this.pendingComments = [];
+          node.leadingComments = [...this.pendingComments]
+          this.pendingComments = []
         }
         // Attach pending blank lines to node
         if (this.pendingBlankLines > 0) {
-          node.precedingBlankLines = this.pendingBlankLines;
-          this.pendingBlankLines = 0;
+          node.precedingBlankLines = this.pendingBlankLines
+          this.pendingBlankLines = 0
         }
-        fields.push(node);
+        fields.push(node)
       }
 
       // Skip comma if present
-      this.skipWhitespace();
+      this.skipWhitespace()
       if (this.currentToken().type === TokenType.Comma) {
-        this.advance();
+        this.advance()
       }
 
-      this.skipWhitespaceAndNewlines();
+      this.skipWhitespaceAndNewlines()
     }
 
     // Add remaining comments
     for (const comment of this.pendingComments) {
-      fields.push(comment);
+      fields.push(comment)
     }
-    this.pendingComments = [];
+    this.pendingComments = []
 
     if (this.currentToken().type === TokenType.RightBrace) {
-      this.advance();
+      this.advance()
     }
 
     return {
@@ -394,47 +395,47 @@ export class Parser {
       braceStyle: 'braced',
       location: {
         start: startLoc.start,
-        end: this.previousToken().location.end,
-      },
-    };
+        end: this.previousToken().location.end
+      }
+    }
   }
 
-  private parseArray(): ArrayNode {
-    const startLoc = this.currentToken().location;
-    this.advance(); // [
+  private parseArray (): ArrayNode {
+    const startLoc = this.currentToken().location
+    this.advance() // [
 
-    const elements: (ValueNode | CommentNode)[] = [];
+    const elements: Array<ValueNode | CommentNode> = []
 
-    this.skipWhitespaceAndNewlines();
+    this.skipWhitespaceAndNewlines()
 
     while (!this.isAtEnd() && this.currentToken().type !== TokenType.RightBracket) {
-      this.collectComments();
+      this.collectComments()
 
       if (this.currentToken().type === TokenType.RightBracket) {
-        break;
+        break
       }
 
       // Add comments as elements
       for (const comment of this.pendingComments) {
-        elements.push(comment);
+        elements.push(comment)
       }
-      this.pendingComments = [];
+      this.pendingComments = []
 
       if (this.canStartValue()) {
-        elements.push(this.parseValue());
+        elements.push(this.parseValue())
       }
 
       // Skip comma if present
-      this.skipWhitespace();
+      this.skipWhitespace()
       if (this.currentToken().type === TokenType.Comma) {
-        this.advance();
+        this.advance()
       }
 
-      this.skipWhitespaceAndNewlines();
+      this.skipWhitespaceAndNewlines()
     }
 
     if (this.currentToken().type === TokenType.RightBracket) {
-      this.advance();
+      this.advance()
     }
 
     return {
@@ -442,117 +443,117 @@ export class Parser {
       elements,
       location: {
         start: startLoc.start,
-        end: this.previousToken().location.end,
-      },
-    };
+        end: this.previousToken().location.end
+      }
+    }
   }
 
-  private parseString(): StringNode {
-    const token = this.currentToken();
-    this.advance();
+  private parseString (): StringNode {
+    const token = this.currentToken()
+    this.advance()
 
     return {
       type: 'String',
       value: token.value,
       raw: token.raw,
       multiline: false,
-      location: token.location,
-    };
+      location: token.location
+    }
   }
 
-  private parseMultilineString(): StringNode {
-    const token = this.currentToken();
-    this.advance();
+  private parseMultilineString (): StringNode {
+    const token = this.currentToken()
+    this.advance()
 
     return {
       type: 'String',
       value: token.value,
       raw: token.raw,
       multiline: true,
-      location: token.location,
-    };
+      location: token.location
+    }
   }
 
-  private parseUnquotedString(): StringNode {
-    const token = this.currentToken();
-    this.advance();
+  private parseUnquotedString (): StringNode {
+    const token = this.currentToken()
+    this.advance()
 
     return {
       type: 'String',
       value: token.value,
       raw: token.raw,
       multiline: false,
-      location: token.location,
-    };
+      location: token.location
+    }
   }
 
-  private parseNumber(): NumberNode {
-    const token = this.currentToken();
-    this.advance();
+  private parseNumber (): NumberNode {
+    const token = this.currentToken()
+    this.advance()
 
     return {
       type: 'Number',
       value: parseFloat(token.value),
       raw: token.raw,
-      location: token.location,
-    };
+      location: token.location
+    }
   }
 
-  private parseBoolean(): BooleanNode {
-    const token = this.currentToken();
-    this.advance();
+  private parseBoolean (): BooleanNode {
+    const token = this.currentToken()
+    this.advance()
 
     return {
       type: 'Boolean',
       value: token.value === 'true',
-      location: token.location,
-    };
+      location: token.location
+    }
   }
 
-  private parseNull(): NullNode {
-    const token = this.currentToken();
-    this.advance();
+  private parseNull (): NullNode {
+    const token = this.currentToken()
+    this.advance()
 
     return {
       type: 'Null',
-      location: token.location,
-    };
+      location: token.location
+    }
   }
 
-  private parseSubstitution(): SubstitutionNode {
-    const token = this.currentToken();
-    this.advance();
+  private parseSubstitution (): SubstitutionNode {
+    const token = this.currentToken()
+    this.advance()
 
     return {
       type: 'Substitution',
       path: token.value,
       optional: token.raw.includes('${?'),
       raw: token.raw,
-      location: token.location,
-    };
+      location: token.location
+    }
   }
 
-  private parseComment(): CommentNode {
-    const token = this.currentToken();
-    this.advance();
+  private parseComment (): CommentNode {
+    const token = this.currentToken()
+    this.advance()
 
     return {
       type: 'Comment',
       style: token.raw.startsWith('//') ? '//' : '#',
       value: token.value,
-      location: token.location,
-    };
-  }
-
-  private collectComments(): void {
-    while (this.currentToken().type === TokenType.Comment) {
-      this.pendingComments.push(this.parseComment());
-      this.skipWhitespaceAndNewlines();
+      location: token.location
     }
   }
 
-  private canStartValue(): boolean {
-    const type = this.currentToken().type;
+  private collectComments (): void {
+    while (this.currentToken().type === TokenType.Comment) {
+      this.pendingComments.push(this.parseComment())
+      this.skipWhitespaceAndNewlines()
+    }
+  }
+
+  private canStartValue (): boolean {
+    const type = this.currentToken().type
     return (
       type === TokenType.LeftBrace ||
       type === TokenType.LeftBracket ||
@@ -563,11 +564,11 @@ export class Parser {
       type === TokenType.Null ||
       type === TokenType.Substitution ||
       type === TokenType.Key
-    );
+    )
   }
 
-  private isAtLineEnd(): boolean {
-    const type = this.currentToken().type;
+  private isAtLineEnd (): boolean {
+    const type = this.currentToken().type
     return (
       type === TokenType.Newline ||
       type === TokenType.Comment ||
@@ -575,61 +576,78 @@ export class Parser {
       type === TokenType.RightBrace ||
       type === TokenType.RightBracket ||
       type === TokenType.Comma
-    );
+    )
   }
 
-  private skipWhitespace(): void {
+  private skipWhitespace (): void {
     while (this.currentToken().type === TokenType.Whitespace) {
-      this.advance();
+      this.advance()
     }
   }
 
-  private skipWhitespaceAndNewlines(): void {
-    let consecutiveNewlines = 0;
+  private skipWhitespaceAndNewlines (): void {
+    let consecutiveNewlines = 0
 
     while (
       this.currentToken().type === TokenType.Whitespace ||
       this.currentToken().type === TokenType.Newline
     ) {
       if (this.currentToken().type === TokenType.Newline) {
-        consecutiveNewlines++;
+        consecutiveNewlines++
       }
-      this.advance();
+      this.advance()
     }
 
     // Blank lines = consecutive newlines - 1 (first newline ends previous line)
     // Only count if we have 2+ newlines (at least one blank line)
     if (consecutiveNewlines >= 2) {
-      this.pendingBlankLines = consecutiveNewlines - 1;
+      this.pendingBlankLines = consecutiveNewlines - 1
     }
   }
 
-  private currentToken(): Token {
-    return this.tokens[this.pos] ?? this.tokens[this.tokens.length - 1]!;
+  private currentToken (): Token {
+    const token = this.tokens[this.pos]
+    if (token !== undefined) return token
+    const lastToken = this.tokens[this.tokens.length - 1]
+    if (lastToken !== undefined) return lastToken
+    return this.createEOFToken()
   }
 
-  private previousToken(): Token {
-    return this.tokens[this.pos - 1] ?? this.tokens[0]!;
+  private previousToken (): Token {
+    const token = this.tokens[this.pos - 1]
+    if (token !== undefined) return token
+    const firstToken = this.tokens[0]
+    if (firstToken !== undefined) return firstToken
+    return this.createEOFToken()
   }
 
-  private advance(): Token {
-    const token = this.currentToken();
+  private createEOFToken (): Token {
+    return {
+      type: TokenType.EOF,
+      value: '',
+      raw: '',
+      location: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 1, offset: 0 } }
+    }
+  }
+
+  private advance (): Token {
+    const token = this.currentToken()
     if (!this.isAtEnd()) {
-      this.pos++;
+      this.pos++
     }
-    return token;
+    return token
   }
 
-  private isAtEnd(): boolean {
-    return this.currentToken().type === TokenType.EOF;
+  private isAtEnd (): boolean {
+    return this.currentToken().type === TokenType.EOF
   }
 }
 
 /**
  * Parse HOCON source into AST
  */
-export function parse(source: string): DocumentNode {
-  const tokens = tokenize(source);
-  const parser = new Parser(tokens);
-  return parser.parse();
+export function parse (source: string): DocumentNode {
+  const tokens = tokenize(source)
+  const parser = new Parser(tokens)
+  return parser.parse()
 }
