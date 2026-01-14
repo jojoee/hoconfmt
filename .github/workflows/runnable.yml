@@ -47,7 +47,23 @@ jobs:
       - name: Test CLI version
         run: node bin/hoconfmt.js --version
 
-      - name: Test CLI with sample file
+      - name: Test CLI with all-cases.conf
         run: |
-          echo 'key = "value"' > test.conf
-          node bin/hoconfmt.js test.conf || true
+          # Copy test file to avoid modifying original
+          cp resource/all-cases.conf test.conf
+          
+          # Test --check mode (should fail on unformatted INVALID section)
+          if node bin/hoconfmt.js --check test.conf; then
+            echo "ERROR: --check should have failed on unformatted file"
+            exit 1
+          fi
+          
+          # Test --write mode to format the file
+          node bin/hoconfmt.js --write test.conf
+          
+          # Test --check mode on formatted file (should pass)
+          node bin/hoconfmt.js --check test.conf
+          
+          # Verify formatting applied correctly
+          echo "Formatted file preview:"
+          head -n 20 test.conf
