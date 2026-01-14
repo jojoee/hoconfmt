@@ -26,19 +26,27 @@ pnpm add hoconfmt
 npm install -g hoconfmt
 ```
 
+Requires Node.js >= 24.0.0
+
 ## Usage
 
 ### CLI
 
 ```bash
-# Check if files are formatted (default mode)
-hoconfmt file.conf
+# Check if files are formatted (validates without modifying)
+hoconfmt --check file.conf
 
 # Check multiple files
-hoconfmt "src/**/*.conf"
+hoconfmt --check "src/**/*.conf"
 
 # Check all .conf files in directory
-hoconfmt src/
+hoconfmt --check src/
+
+# Format files in-place (overwrites)
+hoconfmt --write file.conf
+
+# Format all .conf files in directory
+hoconfmt --write src/
 
 # Show help
 hoconfmt --help
@@ -48,8 +56,8 @@ hoconfmt --version
 ```
 
 Exit codes:
-- `0` - All files are formatted correctly
-- `1` - Some files need formatting or errors occurred
+- `0` - All files are formatted correctly (check) or formatted successfully (write)
+- `1` - Some files need formatting, errors occurred, or no mode specified
 
 ### API
 
@@ -86,10 +94,13 @@ const formatted = format('key = "value"');
 
 ```bash
 # Check a file
-docker run --rm -v $(pwd):/data ghcr.io/jojoee/hoconfmt /data/file.conf
+docker run --rm -v $(pwd):/data ghcr.io/jojoee/hoconfmt --check /data/file.conf
 
 # Check all .conf files in a directory
-docker run --rm -v $(pwd):/data ghcr.io/jojoee/hoconfmt /data/
+docker run --rm -v $(pwd):/data ghcr.io/jojoee/hoconfmt --check /data/
+
+# Format a file
+docker run --rm -v $(pwd):/data ghcr.io/jojoee/hoconfmt --write /data/file.conf
 ```
 
 ## Formatting Rules
@@ -149,7 +160,7 @@ format('key="value"');
 
 ```bash
 # .husky/pre-commit
-npx hoconfmt "src/**/*.conf"
+npx hoconfmt --check "src/**/*.conf"
 ```
 
 ### VS Code Task
@@ -161,7 +172,7 @@ npx hoconfmt "src/**/*.conf"
     {
       "label": "Check HOCON",
       "type": "shell",
-      "command": "npx hoconfmt src/"
+      "command": "npx hoconfmt --check src/"
     }
   ]
 }
@@ -172,7 +183,7 @@ npx hoconfmt "src/**/*.conf"
 ```yaml
 # GitHub Actions
 - name: Check HOCON formatting
-  run: npx hoconfmt "src/**/*.conf"
+  run: npx hoconfmt --check "src/**/*.conf"
 ```
 
 ## Development
@@ -190,11 +201,16 @@ npm run test:coverage
 # Build
 npm run build
 
+# Build CLI
+npm run build:cli
+
 # Lint
 npm run lint
 ```
 
-```bash run locally
+```bash
+# Run locally
+
 # Check a single file
 node bin/hoconfmt.js --check resource/all-cases.conf
 
@@ -202,15 +218,14 @@ node bin/hoconfmt.js --check resource/all-cases.conf
 node bin/hoconfmt.js --check resource/
 
 # Format a single file (writes changes)
-node bin/hoconfmt.js resource/all-cases.conf
+node bin/hoconfmt.js --write resource/all-cases.conf
 
 # Format entire resource folder (writes changes)
-node bin/hoconfmt.js resource/
+node bin/hoconfmt.js --write resource/
 ```
 
 ## TODO
 
-- [ ] Docker support
 - [ ] Add Mutation test
 
 ## Related
