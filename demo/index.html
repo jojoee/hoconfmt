@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>hoconfmt Demo - HOCON Formatter</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+  <style>
+    html, body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .section {
+      padding: 2rem 1.5rem;
+      flex: 1;
+    }
+    
+    .box {
+      border: none;
+      box-shadow: none;
+    }
+
+    .hocon-textarea {
+      font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace;
+      font-size: 0.875rem;
+      border: 1px solid #3d3d3d;
+      resize: vertical;
+    }
+    
+    .hocon-textarea:focus {
+      border-color: #00d1b2;
+      box-shadow: 0 0 0 0.125em rgba(0, 209, 178, 0.25);
+    }
+    
+    .output-area {
+      font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace;
+      font-size: 0.875rem;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      border: 1px solid #3d3d3d;
+      border-radius: 4px;
+      padding: 0.625em;
+      overflow: auto;
+    }
+
+    #input, #output {
+      min-height: 400px;
+      max-height: none;
+    }
+
+    a {
+      color: #00d1b2;
+    }
+    
+    a:hover {
+      color: #00e7c3;
+    }
+  </style>
+</head>
+<body>
+  <!-- Main Content -->
+  <section class="section">
+    <div class="container">
+      <div class="columns is-multiline">
+        <!-- Input Column -->
+        <div class="column is-half-desktop is-full-tablet">
+          <div class="box">
+            <div class="level">
+              <div class="level-left">
+                <h2 class="title is-5">Input (Unformatted HOCON)</h2>
+              </div>
+              <div class="level-right">
+                <button id="formatBtn" class="button is-primary">Format</button>
+              </div>
+            </div>
+            <textarea id="input" class="textarea hocon-textarea fixed-height"></textarea>
+          </div>
+        </div>
+
+        <!-- Output Column -->
+        <div class="column is-half-desktop is-full-tablet">
+          <div class="box">
+            <div class="level">
+              <div class="level-left">
+                <h2 class="title is-5">Output (Formatted HOCON)</h2>
+              </div>
+              <div class="level-right">
+                <button id="copyBtn" class="button is-primary" disabled>Copy</button>
+              </div>
+            </div>
+            <pre id="output" class="output-area fixed-height"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="content has-text-centered">
+      <p>
+        <strong>hoconfmt</strong> by <a href="https://github.com/jojoee">jojoee</a>.
+        <a href="https://github.com/jojoee/hoconfmt">GitHub</a> |
+        <a href="https://www.npmjs.com/package/hoconfmt">npm</a>
+      </p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/hoconfmt@1.2.1/dist/hoconfmt.umd.js"></script>
+  <script>
+    const DEFAULT_CONTENT_URL = 'https://raw.githubusercontent.com/jojoee/hoconfmt/refs/heads/main/resource/all-cases.conf';
+    
+    const inputEl = document.getElementById('input');
+    const outputEl = document.getElementById('output');
+    const formatBtn = document.getElementById('formatBtn');
+    const copyBtn = document.getElementById('copyBtn');
+
+    // Load default content on page load
+    async function loadDefaultContent() {
+      try {
+        const response = await fetch(DEFAULT_CONTENT_URL);
+        if (response.ok) {
+          const content = await response.text();
+          inputEl.value = content;
+        }
+      } catch (error) {
+        console.error('Failed to load default content:', error);
+      }
+    }
+
+    // Sync heights between input and output
+    function syncHeights() {
+      // Get the natural height of both elements
+      inputEl.style.height = 'auto';
+      outputEl.style.height = 'auto';
+      
+      const inputScrollHeight = inputEl.scrollHeight;
+      const outputScrollHeight = outputEl.scrollHeight;
+      
+      // Use the maximum height for both
+      const maxHeight = Math.max(inputScrollHeight, outputScrollHeight);
+      
+      inputEl.style.height = maxHeight + 'px';
+      outputEl.style.height = maxHeight + 'px';
+    }
+
+    // Format button click handler
+    formatBtn.addEventListener('click', function() {
+      const input = inputEl.value;
+      
+      if (!input.trim()) {
+        outputEl.textContent = '';
+        outputEl.classList.remove('full-height');
+        outputEl.classList.add('fixed-height');
+        inputEl.classList.remove('full-height');
+        inputEl.classList.add('fixed-height');
+        inputEl.style.height = '';
+        outputEl.style.height = '';
+        copyBtn.disabled = true;
+        return;
+      }
+
+      try {
+        const formatted = hoconfmt.format(input);
+        outputEl.textContent = formatted;
+        
+        // Remove fixed height classes
+        inputEl.classList.remove('fixed-height');
+        outputEl.classList.remove('fixed-height');
+        
+        // Sync heights after a brief delay to ensure content is rendered
+        setTimeout(syncHeights, 10);
+        
+        copyBtn.disabled = false;
+      } catch (error) {
+        outputEl.textContent = 'Error: ' + (error.message || 'Invalid HOCON');
+        
+        // Remove fixed height classes
+        inputEl.classList.remove('fixed-height');
+        outputEl.classList.remove('fixed-height');
+        
+        // Sync heights even on error
+        setTimeout(syncHeights, 10);
+        
+        copyBtn.disabled = true;
+      }
+    });
+
+    // Copy button click handler
+    copyBtn.addEventListener('click', async function() {
+      const text = outputEl.textContent;
+      
+      if (!text) {
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (error) {
+        console.error('Failed to copy:', error);
+      }
+    });
+
+    // Initialize
+    loadDefaultContent();
+  </script>
+</body>
+</html>
