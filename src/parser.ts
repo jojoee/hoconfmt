@@ -347,6 +347,10 @@ export class Parser {
 
     const fields: Array<FieldNode | IncludeNode | CommentNode> = []
 
+    // Save outer pending comments to prevent scope leakage
+    const savedPendingComments = this.pendingComments
+    this.pendingComments = []
+
     this.skipWhitespaceAndNewlines()
 
     while (!this.isAtEnd() && this.currentToken().type !== TokenType.RightBrace) {
@@ -383,7 +387,9 @@ export class Parser {
     for (const comment of this.pendingComments) {
       fields.push(comment)
     }
-    this.pendingComments = []
+
+    // Restore outer pending comments
+    this.pendingComments = savedPendingComments
 
     if (this.currentToken().type === TokenType.RightBrace) {
       this.advance()
@@ -405,6 +411,10 @@ export class Parser {
     this.advance() // [
 
     const elements: Array<ValueNode | CommentNode> = []
+
+    // Save outer pending comments to prevent scope leakage
+    const savedPendingComments = this.pendingComments
+    this.pendingComments = []
 
     this.skipWhitespaceAndNewlines()
 
@@ -433,6 +443,9 @@ export class Parser {
 
       this.skipWhitespaceAndNewlines()
     }
+
+    // Restore outer pending comments
+    this.pendingComments = savedPendingComments
 
     if (this.currentToken().type === TokenType.RightBracket) {
       this.advance()

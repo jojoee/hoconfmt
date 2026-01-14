@@ -353,4 +353,79 @@ key = "value"`;
       expect(result).toContain('${default-props} {');
     });
   });
+
+  describe('fix #7: comment scope preservation', () => {
+    it('should keep comment at root level before nested object', () => {
+      const input = `  // cache
+dragonfly = {
+  remote-cache = {
+    host = "localhost"
+    port = 6379
+  }
+}`;
+      const result = format(input);
+
+      // Comment should be at root level, not inside nested object
+      expect(result).toBe(`// cache
+dragonfly = {
+  remote-cache = {
+    host = "localhost"
+    port = 6379
+  }
+}
+`);
+    });
+
+    it('should keep multiple comments at root level before nested object', () => {
+      const input = `// How you find the right timeout setting? should below
+ // - less than default client timeout e.g. 30s
+   // https://grafana.example.com/dashboard
+dragonfly = {
+  remote-cache = {
+    timeout = "2 s"
+  }
+}`;
+      const result = format(input);
+
+      // All comments should be at root level
+      expect(result).toContain('// How you find');
+      expect(result).toContain('// - less than');
+      expect(result).toContain('// https://grafana');
+      // Comments should come before dragonfly, not inside remote-cache
+      const dragonflyIndex = result.indexOf('dragonfly');
+      const commentIndex = result.indexOf('// How you find');
+      expect(commentIndex).toBeLessThan(dragonflyIndex);
+      // Verify comment is not indented (at root level)
+      expect(result).toMatch(/^\/\/ How you find/m);
+    });
+
+    it('should not leak comments into nested arrays', () => {
+      const input = `// array comment
+items = [
+  "one"
+  "two"
+]`;
+      const result = format(input);
+
+      // Comment should be before items, not inside array
+      // Array is short so it fits on single line
+      expect(result).toBe(`// array comment
+items = ["one", "two"]
+`);
+    });
+
+    it('should preserve comments inside objects at correct scope', () => {
+      const input = `outer = {
+  // inner comment
+  inner = {
+    key = "value"
+  }
+}`;
+      const result = format(input);
+
+      // Comment should be inside outer, before inner
+      expect(result).toContain('  // inner comment');
+      expect(result).toMatch(/outer = \{\n {2}\/\/ inner comment\n {2}inner = \{/);
+    });
+  });
 });
