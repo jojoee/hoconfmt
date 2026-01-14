@@ -171,5 +171,22 @@ server {
       const field = ast.body[0] as { value: { type: string } };
       expect(field.value.type).toBe('Null');
     });
+
+    it('should parse multiline string values', () => {
+      const ast = parse('key = """line1\nline2\nline3"""');
+
+      const field = ast.body[0] as { value: { type: string; value: string; multiline: boolean } };
+      expect(field.value.type).toBe('String');
+      expect(field.value.multiline).toBe(true);
+      expect(field.value.value).toContain('line1');
+    });
+
+    it('should parse unquoted string values', () => {
+      const ast = parse('key = unquoted-value');
+
+      const field = ast.body[0] as { value: { type: string; value: string } };
+      expect(field.value.type).toBe('String');
+      expect(field.value.value).toBe('unquoted-value');
+    });
   });
 });
