@@ -175,6 +175,28 @@ key2 = "value2"
       expect(result).toContain('${?optional.key}');
     });
   });
+
+  describe('boolean formatting', () => {
+    it('should format true value', () => {
+      const result = format('enabled = true');
+
+      expect(result).toContain('enabled = true');
+    });
+
+    it('should format false value', () => {
+      const result = format('disabled = false');
+
+      expect(result).toContain('disabled = false');
+    });
+  });
+
+  describe('null formatting', () => {
+    it('should format null value', () => {
+      const result = format('empty = null');
+
+      expect(result).toContain('empty = null');
+    });
+  });
 });
 
 describe('Check', () => {
