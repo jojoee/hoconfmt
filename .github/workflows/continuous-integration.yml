@@ -39,11 +39,8 @@ jobs:
       - name: Type check
         run: npx tsc --noEmit
 
-      - name: Test
-        run: npm run test
-
       - name: Test coverage
-        run: npm run test:coverage
+        run: npx vitest run --coverage
 
       - name: Build package
         run: npm run build
@@ -51,8 +48,8 @@ jobs:
       - name: Build CLI
         run: npm run build:cli
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
         with:
-          files: ./coverage/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
