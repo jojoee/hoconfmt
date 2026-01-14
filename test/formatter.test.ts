@@ -197,6 +197,22 @@ key2 = "value2"
       expect(result).toContain('empty = null');
     });
   });
+
+  describe('concatenation formatting', () => {
+    it('should format string concatenation with substitution', () => {
+      const result = format('path = ${home}"/bin"');
+
+      expect(result).toContain('${home}');
+      expect(result).toContain('"/bin"');
+    });
+
+    it('should format multiple string concatenation', () => {
+      const result = format('greeting = "Hello" " " "World"');
+
+      expect(result).toContain('"Hello"');
+      expect(result).toContain('"World"');
+    });
+  });
 });
 
 describe('Check', () => {
