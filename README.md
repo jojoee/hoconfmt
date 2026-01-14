@@ -3,7 +3,14 @@
 Opinionated HOCON formatter - zero configuration, one way to format.
 
 [![npm version](https://badge.fury.io/js/hoconfmt.svg)](https://badge.fury.io/js/hoconfmt)
+[![Download - npm](https://img.shields.io/npm/dt/hoconfmt.svg)](https://www.npmjs.com/package/hoconfmt)
+[![License - npm](https://img.shields.io/npm/l/hoconfmt.svg)](http://opensource.org/licenses/MIT)
+[![install size](https://packagephobia.com/badge?p=hoconfmt)](https://packagephobia.com/result?p=hoconfmt)
+[![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg?style=flat-square)](https://github.com/semantic-release/semantic-release)
+
 [![continuous integration](https://github.com/jojoee/hoconfmt/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/jojoee/hoconfmt/actions/workflows/continuous-integration.yml)
+[![release](https://github.com/jojoee/hoconfmt/actions/workflows/release.yml/badge.svg)](https://github.com/jojoee/hoconfmt/actions/workflows/release.yml)
+[![runnable](https://github.com/jojoee/hoconfmt/actions/workflows/runnable.yml/badge.svg)](https://github.com/jojoee/hoconfmt/actions/workflows/runnable.yml)
 [![codecov](https://codecov.io/gh/jojoee/hoconfmt/branch/main/graph/badge.svg)](https://codecov.io/gh/jojoee/hoconfmt)
 
 ## Philosophy
