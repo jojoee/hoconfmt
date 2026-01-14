@@ -53,29 +53,17 @@ export class Formatter {
   }
 
   private formatDocument(doc: DocumentNode): void {
-    let lastWasComment = false;
-    let lastWasInclude = false;
-
     for (let i = 0; i < doc.body.length; i++) {
       const node = doc.body[i]!;
       const isFirst = i === 0;
 
-      // Add blank line between different types of elements
-      if (!isFirst) {
-        if (node.type === 'Include' && !lastWasInclude) {
-          this.output += '\n';
-        } else if (node.type !== 'Include' && lastWasInclude) {
-          this.output += '\n';
-        } else if (node.type === 'Comment' && !lastWasComment) {
-          // Keep comments close to what follows
-        }
+      // Add blank line if node has preceding blank lines (collapse to max 1)
+      if (!isFirst && node.precedingBlankLines && node.precedingBlankLines > 0) {
+        this.output += '\n';
       }
 
       this.formatRootElement(node);
       this.output += '\n';
-
-      lastWasComment = node.type === 'Comment';
-      lastWasInclude = node.type === 'Include';
     }
   }
 
@@ -216,6 +204,13 @@ export class Formatter {
 
     for (let i = 0; i < node.fields.length; i++) {
       const field = node.fields[i]!;
+      const isFirst = i === 0;
+
+      // Add blank line if field has preceding blank lines (collapse to max 1)
+      if (!isFirst && field.precedingBlankLines && field.precedingBlankLines > 0) {
+        this.output += '\n';
+      }
+
       this.formatRootElement(field);
       this.output += '\n';
     }

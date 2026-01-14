@@ -25,6 +25,7 @@ export class Parser {
   private tokens: Token[] = [];
   private pos: number = 0;
   private pendingComments: CommentNode[] = [];
+  private pendingBlankLines: number = 0;
 
   constructor(tokens: Token[]) {
     this.tokens = tokens;
@@ -53,6 +54,11 @@ export class Parser {
         if (this.pendingComments.length > 0) {
           node.leadingComments = [...this.pendingComments];
           this.pendingComments = [];
+        }
+        // Attach pending blank lines to node
+        if (this.pendingBlankLines > 0) {
+          node.precedingBlankLines = this.pendingBlankLines;
+          this.pendingBlankLines = 0;
         }
         body.push(node);
       }
@@ -355,6 +361,11 @@ export class Parser {
           node.leadingComments = [...this.pendingComments];
           this.pendingComments = [];
         }
+        // Attach pending blank lines to node
+        if (this.pendingBlankLines > 0) {
+          node.precedingBlankLines = this.pendingBlankLines;
+          this.pendingBlankLines = 0;
+        }
         fields.push(node);
       }
 
@@ -574,11 +585,22 @@ export class Parser {
   }
 
   private skipWhitespaceAndNewlines(): void {
+    let consecutiveNewlines = 0;
+
     while (
       this.currentToken().type === TokenType.Whitespace ||
       this.currentToken().type === TokenType.Newline
     ) {
+      if (this.currentToken().type === TokenType.Newline) {
+        consecutiveNewlines++;
+      }
       this.advance();
+    }
+
+    // Blank lines = consecutive newlines - 1 (first newline ends previous line)
+    // Only count if we have 2+ newlines (at least one blank line)
+    if (consecutiveNewlines >= 2) {
+      this.pendingBlankLines = consecutiveNewlines - 1;
     }
   }
 

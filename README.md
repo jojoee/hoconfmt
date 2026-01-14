@@ -103,7 +103,7 @@ These rules are **not configurable** - that's the point!
 | Brace style | Same line (`key {`) |
 | Comments | Normalized to `//` style |
 | Trailing whitespace | Removed |
-| Blank lines | Multiple collapsed to single |
+| Blank lines | Preserved (max 1 between elements) |
 | End of file | Single newline |
 | String quotes | Double quotes |
 | Array style | Single line if < 80 chars |

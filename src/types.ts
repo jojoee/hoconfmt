@@ -66,6 +66,7 @@ export interface BaseNode {
   location: Location;
   leadingComments?: CommentNode[];
   trailingComment?: CommentNode;
+  precedingBlankLines?: number;  // Number of blank lines before this node
 }
 
 /**

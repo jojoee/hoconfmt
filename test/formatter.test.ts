@@ -38,15 +38,87 @@ describe('Formatter', () => {
   });
 
   describe('whitespace handling', () => {
-    it('should collapse multiple blank lines', () => {
+    it('should preserve no blank lines between keys', () => {
       const input = `key1 = "value1"
-
-
-key2 = "value2"`;
+key2 = "value2"
+key3 = "value3"`;
 
       const result = format(input);
 
+      // No blank lines should be added
+      expect(result).toBe('key1 = "value1"\nkey2 = "value2"\nkey3 = "value3"\n');
+    });
+
+    it('should preserve single blank line between keys', () => {
+      const input = `key1 = "value1"
+
+key2 = "value2"
+
+key3 = "value3"`;
+
+      const result = format(input);
+
+      // Single blank lines should be preserved
+      expect(result).toBe('key1 = "value1"\n\nkey2 = "value2"\n\nkey3 = "value3"\n');
+    });
+
+    it('should collapse multiple blank lines to single blank line', () => {
+      const input = `key1 = "value1"
+
+
+key2 = "value2"
+
+
+
+key3 = "value3"`;
+
+      const result = format(input);
+
+      // Multiple blank lines should collapse to single blank line
+      expect(result).toBe('key1 = "value1"\n\nkey2 = "value2"\n\nkey3 = "value3"\n');
       // Should not have more than 2 consecutive newlines
+      expect(result).not.toMatch(/\n{3,}/);
+    });
+
+    it('should collapse trailing blank lines to single newline', () => {
+      const input = `key1 = "value1"
+key2 = "value2"
+
+
+`;
+
+      const result = format(input);
+
+      // Should end with single newline (no trailing blank lines)
+      expect(result).toBe('key1 = "value1"\nkey2 = "value2"\n');
+    });
+
+    it('should preserve blank lines inside objects', () => {
+      const input = `obj = {
+  key1 = "value1"
+
+  key2 = "value2"
+}`;
+
+      const result = format(input);
+
+      // Single blank line inside object should be preserved
+      expect(result).toContain('key1 = "value1"\n\n  key2 = "value2"');
+    });
+
+    it('should collapse multiple blank lines inside objects', () => {
+      const input = `obj = {
+  key1 = "value1"
+
+
+
+  key2 = "value2"
+}`;
+
+      const result = format(input);
+
+      // Multiple blank lines inside object should collapse to single blank line
+      expect(result).toContain('key1 = "value1"\n\n  key2 = "value2"');
       expect(result).not.toMatch(/\n{3,}/);
     });
   });
