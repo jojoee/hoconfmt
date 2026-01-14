@@ -42,6 +42,50 @@ describe('Parser', () => {
       expect(include.path).toBe('file.conf');
       expect(include.required).toBe(false);
     });
+
+    it('should parse required include', () => {
+      const ast = parse('include required("file.conf")');
+
+      expect(ast.body).toHaveLength(1);
+      expect(ast.body[0]?.type).toBe('Include');
+
+      const include = ast.body[0] as { path: string; required: boolean; kind: string };
+      expect(include.path).toBe('file.conf');
+      expect(include.required).toBe(true);
+    });
+
+    it('should parse url include', () => {
+      const ast = parse('include url("http://example.com/config.conf")');
+
+      expect(ast.body).toHaveLength(1);
+      expect(ast.body[0]?.type).toBe('Include');
+
+      const include = ast.body[0] as { path: string; kind: string };
+      expect(include.path).toBe('http://example.com/config.conf');
+      expect(include.kind).toBe('url');
+    });
+
+    it('should parse classpath include', () => {
+      const ast = parse('include classpath("reference.conf")');
+
+      expect(ast.body).toHaveLength(1);
+      expect(ast.body[0]?.type).toBe('Include');
+
+      const include = ast.body[0] as { path: string; kind: string };
+      expect(include.path).toBe('reference.conf');
+      expect(include.kind).toBe('classpath');
+    });
+
+    it('should parse file include', () => {
+      const ast = parse('include file("local.conf")');
+
+      expect(ast.body).toHaveLength(1);
+      expect(ast.body[0]?.type).toBe('Include');
+
+      const include = ast.body[0] as { path: string; kind: string };
+      expect(include.path).toBe('local.conf');
+      expect(include.kind).toBe('file');
+    });
   });
 
   describe('comments', () => {
