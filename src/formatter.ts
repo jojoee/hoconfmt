@@ -69,9 +69,16 @@ export class Formatter {
   }
 
   private formatRootElement (node: FieldNode | IncludeNode | CommentNode): void {
-    // Format leading comments
+    // Format leading comments with proper indentation (fix #2)
     if (node.leadingComments != null) {
-      for (const comment of node.leadingComments) {
+      for (let i = 0; i < node.leadingComments.length; i++) {
+        const comment = node.leadingComments[i]
+        if (comment === undefined) continue
+        // Add blank line before comment if it has preceding blank lines (fix #6)
+        if (i > 0 && comment.precedingBlankLines !== undefined && comment.precedingBlankLines > 0) {
+          this.output += '\n'
+        }
+        this.writeIndent()
         this.formatComment(comment)
         this.output += '\n'
       }
@@ -82,6 +89,7 @@ export class Formatter {
     } else if (node.type === 'Field') {
       this.formatField(node)
     } else if (node.type === 'Comment') {
+      this.writeIndent()
       this.formatComment(node)
     }
   }
@@ -281,20 +289,72 @@ export class Formatter {
   }
 
   private formatConcatenation (node: ConcatenationNode): void {
-    for (let i = 0; i < node.parts.length; i++) {
-      const currPart = node.parts[i]
-      if (currPart === undefined) continue
+    // Check if concatenation contains substitutions, objects, or multiline strings
+    // These need special handling and cannot be combined into a single quoted string
+    const hasSubstitution = node.parts.some(p => p.type === 'Substitution')
+    const hasObject = node.parts.some(p => p.type === 'Object')
+    const hasMultiline = node.parts.some(p => p.type === 'String' && p.multiline)
 
-      if (i > 0) {
-        // Add space between concatenated parts if needed
-        const prevPart = node.parts[i - 1]
+    if (hasSubstitution || hasObject || hasMultiline) {
+      // Keep parts separate for substitutions, objects, and multiline strings
+      for (let i = 0; i < node.parts.length; i++) {
+        const currPart = node.parts[i]
+        if (currPart === undefined) continue
 
-        // Don't add space before/after substitutions in some cases
-        if (prevPart !== undefined && prevPart.type !== 'Substitution' && currPart.type !== 'Substitution') {
-          this.output += ' '
+        if (i > 0) {
+          const prevPart = node.parts[i - 1]
+          if (prevPart !== undefined) {
+            // Check if either part is a multiline string - no space if so (fix #4)
+            const prevIsMultiline = prevPart.type === 'String' && prevPart.multiline
+            const currIsMultiline = currPart.type === 'String' && currPart.multiline
+
+            if (prevIsMultiline || currIsMultiline) {
+              // No space for multiline string concatenations (fix #4)
+            } else if (prevPart.type === 'Substitution' && currPart.type === 'Object') {
+              // Add space when Substitution is followed by Object (fix #5)
+              this.output += ' '
+            } else if (prevPart.type !== 'Substitution' && currPart.type !== 'Substitution') {
+              this.output += ' '
+            }
+          }
         }
+        this.formatValue(currPart)
       }
-      this.formatValue(currPart)
+    } else {
+      // Combine all parts into a single quoted string (fix #1)
+      // Preserve original spacing by checking position gaps
+      let combined = ''
+      for (let i = 0; i < node.parts.length; i++) {
+        const part = node.parts[i]
+        if (part === undefined) continue
+        if (i > 0) {
+          const prevPart = node.parts[i - 1]
+          // Add space only if there was whitespace between parts in the original
+          if (prevPart !== undefined && prevPart.location.end.offset < part.location.start.offset) {
+            combined += ' '
+          }
+        }
+        combined += this.getPartStringValue(part)
+      }
+      this.output += `"${this.escapeString(combined)}"`
+    }
+  }
+
+  /**
+   * Get the string value of a concatenation part for combining
+   */
+  private getPartStringValue (node: ValueNode): string {
+    switch (node.type) {
+      case 'String':
+        return node.value
+      case 'Number':
+        return node.raw
+      case 'Boolean':
+        return node.value ? 'true' : 'false'
+      case 'Null':
+        return 'null'
+      default:
+        return ''
     }
   }
 

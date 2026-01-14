@@ -547,7 +547,13 @@ export class Parser {
 
   private collectComments (): void {
     while (this.currentToken().type === TokenType.Comment) {
-      this.pendingComments.push(this.parseComment())
+      const comment = this.parseComment()
+      // Attach pending blank lines to this comment (fix #6)
+      if (this.pendingBlankLines > 0) {
+        comment.precedingBlankLines = this.pendingBlankLines
+        this.pendingBlankLines = 0
+      }
+      this.pendingComments.push(comment)
       this.skipWhitespaceAndNewlines()
     }
   }

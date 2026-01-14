@@ -101,12 +101,15 @@ These rules are **not configurable** - that's the point!
 | Indentation | 2 spaces |
 | Key-value separator | `=` with spaces (`key = value`) |
 | Brace style | Same line (`key {`) |
-| Comments | Normalized to `//` style |
+| Comments | Normalized to `//` style, indented to match scope |
 | Trailing whitespace | Removed |
-| Blank lines | Preserved (max 1 between elements) |
+| Blank lines | Preserved (max 1 between elements and comments) |
 | End of file | Single newline |
 | String quotes | Double quotes |
 | Array style | Single line if < 80 chars |
+| Value concatenation | Combined into single quoted string (`60 seconds` → `"60 seconds"`) |
+| Substitution extension | Space preserved (`${ref} { }`) |
+| Triple-quoted strings | Content preserved without extra spacing |
 
 ## API Reference
 

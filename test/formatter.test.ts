@@ -224,11 +224,12 @@ key2 = "value2"
       expect(result).toContain('"/bin"');
     });
 
-    it('should format multiple string concatenation', () => {
+    it('should format multiple string concatenation as single quoted string', () => {
       const result = format('greeting = "Hello" " " "World"');
 
-      expect(result).toContain('"Hello"');
-      expect(result).toContain('"World"');
+      // Fix #1: Concatenations are now combined into single quoted string
+      // Each space between parts adds a space, plus the " " content itself
+      expect(result).toContain('"Hello   World"');
     });
   });
 });
@@ -253,5 +254,103 @@ describe('Check', () => {
 
     // May or may not parse, but should handle gracefully
     expect(typeof result).toBe('boolean');
+  });
+});
+
+describe('Style fixes', () => {
+  describe('fix #1: quote concatenations', () => {
+    it('should quote duration values like "60 seconds"', () => {
+      const result = format('timeout = 60 seconds');
+
+      expect(result).toContain('timeout = "60 seconds"');
+    });
+
+    it('should preserve spacing when quoting concatenations', () => {
+      // 60s has no space between parts
+      const result1 = format('keep-alive-time = 60s');
+      expect(result1).toContain('keep-alive-time = "60s"');
+
+      // 60 s and 2 s have a space between parts
+      const result2 = format('delay = 60 s');
+      expect(result2).toContain('delay = "60 s"');
+
+      const result3 = format('timeout = 2 s');
+      expect(result3).toContain('timeout = "2 s"');
+    });
+  });
+
+  describe('fix #2: comment indentation', () => {
+    it('should indent comments inside objects', () => {
+      const input = `obj = {
+  // comment
+  key = "value"
+}`;
+      const result = format(input);
+
+      expect(result).toContain('  // comment');
+    });
+
+    it('should normalize over-indented comments', () => {
+      const input = `obj = {
+      // over-indented comment
+  key = "value"
+}`;
+      const result = format(input);
+
+      // Comment should be at proper 2-space indent level
+      expect(result).toMatch(/\n {2}\/\/ over-indented comment/);
+    });
+  });
+
+  describe('fix #3 & #6: comment ordering and blank lines', () => {
+    it('should preserve comment order', () => {
+      const input = `// first comment
+// second comment
+key = "value"`;
+
+      const result = format(input);
+
+      expect(result.indexOf('first comment')).toBeLessThan(result.indexOf('second comment'));
+    });
+
+    it('should preserve blank lines between comments', () => {
+      const input = `// first comment
+
+// second comment after blank line
+key = "value"`;
+
+      const result = format(input);
+
+      expect(result).toContain('// first comment\n\n// second comment');
+    });
+  });
+
+  describe('fix #4: triple quote spacing', () => {
+    it('should not add spaces inside multiline string concatenations', () => {
+      const input = 'key = """content"""';
+      const result = format(input);
+
+      // Should preserve multiline string as-is
+      expect(result).toContain('"""content"""');
+    });
+  });
+
+  describe('fix #5: space when extending substitutions', () => {
+    it('should preserve space between substitution and object', () => {
+      const input = 'config = ${base.config} { key = "value" }';
+      const result = format(input);
+
+      // Should have space between substitution and opening brace
+      expect(result).toContain('${base.config} {');
+    });
+
+    it('should handle extending pattern correctly', () => {
+      const input = `producer = \${default-props} {
+  bootstrap.servers = "localhost:9095"
+}`;
+      const result = format(input);
+
+      expect(result).toContain('${default-props} {');
+    });
   });
 });
