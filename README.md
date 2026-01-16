@@ -33,8 +33,6 @@ pnpm add hoconfmt
 npm install -g hoconfmt
 ```
 
-Requires Node.js >= 24.0.0
-
 ## Usage
 
 ### CLI
