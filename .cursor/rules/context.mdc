@@ -28,7 +28,7 @@ hoconfmt/
 ## Technology Stack
 
 - TypeScript (ES2022, strict mode)
-- Node.js >= 24.0.0 (pinned in package.json engines and CI/CD)
+- Node.js >= 18.0.0 (pinned in package.json engines and CI/CD)
 - Vitest for testing (with 80% coverage threshold)
 - esbuild for bundling (ESM, CJS, UMD formats)
 - semantic-release for versioning
@@ -92,9 +92,17 @@ Before committing changes, run these verification steps:
 
 ## Resource Files
 
-- Test examples in `resource/cases/*.conf` (numbered: 01-*, 02-*, etc.)
-- Combined examples in `resource/all-cases.conf` with INVALID and VALID sections
+- Test examples in `resource/*.conf` (numbered: 01-*, 02-*, etc.)
+- Expected formatted output in `resourceout/*.conf` (matches resource/ structure)
 - Use real-world HOCON patterns for testing
+
+To regenerate expected output files:
+
+```bash
+cp -r resource/* resourceout/ && npm install && npm run build:cli && ./bin/hoconfmt.js --write resourceout/
+```
+
+This command copies all resource files, builds the CLI, and formats them in place to create expected output.
 
 ## Post-Work
 
