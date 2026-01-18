@@ -26,5 +26,4 @@ npm-debug.log*
 *.lcov
 
 # Example config folders (for testing only)
-exampleconf/
-exampleconf-tobeformatted/
+resourceout
