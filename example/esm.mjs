@@ -3,7 +3,8 @@
  */
 import { check, format } from '../dist/esm/index.js';
 
-// Example HOCON input
+// Hardcoded string for simplicity and copy-paste friendliness
+// (see resource/all-cases.conf for comprehensive test cases)
 const input = `
 # Database configuration
 database{
