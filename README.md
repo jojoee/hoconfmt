@@ -41,16 +41,22 @@ npm install -g hoconfmt
 # Check if files are formatted (validates without modifying)
 hoconfmt --check file.conf
 
-# Check multiple files
+# Check multiple files with glob pattern
 hoconfmt --check "src/**/*.conf"
 
-# Check all .conf files in directory
+# Check all .conf files in current directory
+hoconfmt --check "*.conf"
+
+# Check all .conf files in directory (recursive)
 hoconfmt --check src/
 
 # Format files in-place (overwrites)
 hoconfmt --write file.conf
 
-# Format all .conf files in directory
+# Format multiple files with glob pattern
+hoconfmt --write "src/**/*.conf"
+
+# Format all .conf files in directory (recursive)
 hoconfmt --write src/
 
 # Show help
@@ -59,6 +65,12 @@ hoconfmt --help
 # Show version
 hoconfmt --version
 ```
+
+Glob patterns support:
+- `*` - matches any characters except path separator
+- `**` - matches any characters including path separator (recursive)
+- `?` - matches single character
+- `{a,b}` - matches either pattern
 
 Exit codes:
 - `0` - All files are formatted correctly (check) or formatted successfully (write)

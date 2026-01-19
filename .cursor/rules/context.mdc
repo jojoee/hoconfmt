@@ -75,6 +75,30 @@ Before committing changes, run these verification steps:
 3. **Code Coverage**: `npm run test:coverage` - Check coverage metrics
 4. **Build**: `npm run build && npm run build:cli` - Ensure all formats build successfully
 
+## Verification Steps (File Pattern Matching)
+
+Verify glob pattern support works correctly:
+
+```bash
+# --check tests
+./bin/hoconfmt.js --check resource/01-simple-key-value.conf  # Single file
+./bin/hoconfmt.js --check resource/                          # Directory
+./bin/hoconfmt.js --check "resource/**/*.conf"               # Glob with **
+./bin/hoconfmt.js --check "resource/*.conf"                  # Glob with wildcard
+./bin/hoconfmt.js --check "nonexistent/**/*.conf"            # Non-matching (error expected)
+
+# --write tests
+./bin/hoconfmt.js --write resourceout/01-simple-key-value.conf  # Single file
+./bin/hoconfmt.js --write resourceout/                          # Directory
+./bin/hoconfmt.js --write "resourceout/**/*.conf"               # Glob with **
+./bin/hoconfmt.js --write "resourceout/*.conf"                  # Glob with wildcard
+
+# Extension filter test
+cp resource/01-simple-key-value.conf resource/01-simple-key-value.notconf
+./bin/hoconfmt.js --check "resource/01-simple-key-value.*"   # Should process 1 .conf file only
+rm resource/01-simple-key-value.notconf
+```
+
 ## Code Architecture
 
 - Lexer-Parser-Formatter pipeline: `lexer.ts` → `parser.ts` → `formatter.ts`

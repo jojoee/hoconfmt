@@ -17,6 +17,7 @@
 
 import { readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs'
 import { resolve, join, extname } from 'node:path'
+import fg from 'fast-glob'
 import { check, format } from './index.js'
 
 interface CliOptions {
@@ -109,9 +110,6 @@ function findConfFiles (dir: string): string[] {
 }
 
 function expandGlob (pattern: string): string[] {
-  // Simple glob expansion for common patterns
-  // For full glob support, users should use shell expansion
-
   const resolved = resolve(pattern)
 
   try {
@@ -123,8 +121,13 @@ function expandGlob (pattern: string): string[] {
       return [resolved]
     }
   } catch {
-    // Path doesn't exist or is a glob pattern
-    // Try to find matching files in current directory
+    // Path doesn't exist, treat as glob pattern
+    try {
+      const matches = fg.sync(pattern, { onlyFiles: true, absolute: true })
+      return matches.filter(f => f.endsWith('.conf'))
+    } catch {
+      return []
+    }
   }
 
   return []
